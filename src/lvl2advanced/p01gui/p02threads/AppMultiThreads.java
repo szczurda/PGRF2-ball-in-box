@@ -43,7 +43,7 @@ public class AppMultiThreads {
         LwjglWindowThread thread = new LwjglWindowThread(0, quit, new lvl2advanced.p01gui.p01simple.Renderer());
         long window = thread.getWindow();
 
-        LwjglWindowThread thread2 = new LwjglWindowThread(1, quit, new lvl5others.p02fractal.Renderer());
+        LwjglWindowThread thread2 = new LwjglWindowThread(1, quit, new lvl2advanced.p03texture.p02cubetexture.Renderer());
         long window2 = thread2.getWindow();
         thread.start();;
         thread2.start();;
