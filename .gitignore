@@ -1,6 +1,7 @@
 /.classpath
 /.project
 *.class
+*.jar
 /bin
 /.idea
 /out

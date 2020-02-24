@@ -54,5 +54,4 @@ void main() {
     EmitVertex();
    
 	EndPrimitive();
-
 }

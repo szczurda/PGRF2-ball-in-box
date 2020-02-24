@@ -1,14 +1,14 @@
-package lvl2advanced.p04target.p04multiple;
+package lvl2advanced.p05pipeline.p04moreShaders;
 
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL14.GL_TEXTURE_COMPARE_MODE;
+import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
+import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+import static org.lwjgl.opengl.GL20.glUniform1f;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 import static org.lwjgl.opengl.GL20.glUseProgram;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
-import static org.lwjgl.opengl.GL30.glBindFramebuffer;
 
 import java.io.IOException;
 import java.nio.DoubleBuffer;
@@ -22,7 +22,6 @@ import org.lwjgl.glfw.GLFWWindowSizeCallback;
 
 import lvl2advanced.p01gui.p01simple.AbstractRenderer;
 import lwjglutils.OGLBuffers;
-import lwjglutils.OGLRenderTarget;
 import lwjglutils.OGLTextRenderer;
 import lwjglutils.OGLTexture2D;
 import lwjglutils.OGLUtils;
@@ -31,7 +30,6 @@ import lwjglutils.ToFloatArray;
 import transforms.Camera;
 import transforms.Mat4;
 import transforms.Mat4PerspRH;
-import transforms.Mat4Scale;
 import transforms.Vec3D;
 
 
@@ -46,16 +44,18 @@ public class Renderer extends AbstractRenderer{
 	double ox, oy;
 	boolean mouseButton1 = false;
 	
-OGLBuffers buffers;
+	OGLBuffers buffers;
 	
-	int shaderProgram, locMat;
+	int shaderProgram, locValue, locMat;
 	
-	OGLTexture2D texture, textureColor1, textureColor2, textureDepth;
-	
-	Camera cam = new Camera();
-	Mat4 proj = new Mat4PerspRH(Math.PI / 4, 1, 1, 10.0);
+	OGLTexture2D texture;
+	OGLTexture2D texture2;
 
-	OGLRenderTarget renderTarget;
+	Camera cam = new Camera();
+	Vec3D cameraPosition;
+	Mat4 proj = new Mat4PerspRH(Math.PI / 4, 1, 0.01, 1000.0);
+	
+	float value = 0;
 	OGLTexture2D.Viewer textureViewer;
 	
 	private GLFWKeyCallback   keyCallback = new GLFWKeyCallback() {
@@ -85,6 +85,12 @@ OGLBuffers buffers;
 					break;
 				case GLFW_KEY_SPACE:
 					cam = cam.withFirstPerson(!cam.getFirstPerson());
+					if (!cam.getFirstPerson()) {
+						cameraPosition=cam.getPosition();
+						cam = cam.withPosition(new Vec3D(0, 0, 0));
+					} else {
+						cam = cam.withPosition(cameraPosition);
+					}
 					break;
 				case GLFW_KEY_R:
 					cam = cam.mulRadius(0.9f);
@@ -92,6 +98,10 @@ OGLBuffers buffers;
 				case GLFW_KEY_F:
 					cam = cam.mulRadius(1.1f);
 					break;
+				case GLFW_KEY_V:
+					value = (value + 0.1f)%1;
+					break;
+					
 				}
 			}
 		}
@@ -104,10 +114,9 @@ OGLBuffers buffers;
             		(w != width || h != height)) {
             	width = w;
             	height = h;
-            	proj = new Mat4PerspRH(Math.PI / 4, height / (double) width, 1, 10.0);
+            	proj = new Mat4PerspRH(Math.PI / 4, height / (double) width, 0.01, 1000.0);
             	if (textRenderer != null)
             		textRenderer.resize(width, height);
-
             }
         }
     };
@@ -153,11 +162,17 @@ OGLBuffers buffers;
     	}
     };
     
-    private GLFWScrollCallback scrollCallback = new GLFWScrollCallback() {
-        @Override public void invoke (long window, double dx, double dy) {
-        }
-    };
- 
+	private GLFWScrollCallback scrollCallback = new GLFWScrollCallback() {
+		@Override
+		public void invoke(long window, double dx, double dy) {
+			if (dy < 0)
+				cam = cam.mulRadius(0.9f);
+			else
+				cam = cam.mulRadius(1.1f);
+
+		}
+	};
+
 	@Override
 	public GLFWKeyCallback getKeyCallback() {
 		return keyCallback;
@@ -184,55 +199,15 @@ OGLBuffers buffers;
 	}
 
 	void createBuffers() {
-		// vertices are not shared among triangles (and thus faces) so each face
-		// can have a correct normal in all vertices
-		// also because of this, the vertices can be directly drawn as GL_TRIANGLES
-		// (three and three vertices form one face) 
-		// triangles defined in index buffer
-				float[] cube = {
+		float[] cube = {
 						// bottom (z-) face
-						1, 0, 0,	0, 0, -1, 	1, 0,
+						1, 0, 0,	0, 0, -1,	1, 0, 
 						0, 0, 0,	0, 0, -1,	0, 0, 
 						1, 1, 0,	0, 0, -1,	1, 1, 
-						0, 1, 0,	0, 0, -1,	0, 1, 
-						// top (z+) face
-						1, 0, 1,	0, 0, 1,	1, 0, 
-						0, 0, 1,	0, 0, 1,	1, 1, 
-						1, 1, 1,	0, 0, 1,	0, 0,
-						0, 1, 1,	0, 0, 1,	0, 1,
-						// x+ face
-						1, 1, 0,	1, 0, 0,	1, 0,
-						1, 0, 0,	1, 0, 0,	1, 1, 
-						1, 1, 1,	1, 0, 0,	0, 0,
-						1, 0, 1,	1, 0, 0,	0, 1,
-						// x- face
-						0, 1, 0,	-1, 0, 0,	1, 0,
-						0, 0, 0,	-1, 0, 0,	0, 0, 
-						0, 1, 1,	-1, 0, 0,	1, 1,
-						0, 0, 1,	-1, 0, 0,	0, 1,
-						// y+ face
-						1, 1, 0,	0, 1, 0,	1, 0,
-						0, 1, 0,	0, 1, 0,	0, 0, 
-						1, 1, 1,	0, 1, 0,	1, 1,
-						0, 1, 1,	0, 1, 0,	0, 1,
-						// y- face
-						1, 0, 0,	0, -1, 0,	1, 0,
-						0, 0, 0,	0, -1, 0,	1, 1, 
-						1, 0, 1,	0, -1, 0,	0, 0,
-						0, 0, 1,	0, -1, 0,	0, 1
-				};
-
-				int[] indexBufferData = new int[36];
-				for (int i = 0; i<6; i++){
-					indexBufferData[i*6] = i*4;
-					indexBufferData[i*6 + 1] = i*4 + 1;
-					indexBufferData[i*6 + 2] = i*4 + 2;
-					indexBufferData[i*6 + 3] = i*4 + 1;
-					indexBufferData[i*6 + 4] = i*4 + 2;
-					indexBufferData[i*6 + 5] = i*4 + 3;
-				}
-				
-				
+						0, 1, 0,	0, 0, -1,	0, 1
+						
+		};
+		int[] indexBufferData = {0, 1, 2, 1, 2, 3};		
 		OGLBuffers.Attrib[] attributes = {
 				new OGLBuffers.Attrib("inPosition", 3),
 				new OGLBuffers.Attrib("inNormal", 3),
@@ -240,99 +215,86 @@ OGLBuffers buffers;
 		};
 
 		buffers = new OGLBuffers(cube, attributes, indexBufferData);
-
-		System.out.println(buffers.toString());
 	}
 
 	@Override
 	public void init() {
-
 		OGLUtils.printOGLparameters();
-		
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 		createBuffers();
 		
-		shaderProgram = ShaderUtils.loadProgram("/lvl2advanced/p04target/p04multiple/textureMoreOutput");
-		
-		glUseProgram(this.shaderProgram);
-		
-		locMat = glGetUniformLocation(shaderProgram, "mat");
-		
-		renderTarget = new OGLRenderTarget(512, 512, 2);
-
-		System.out.print(renderTarget.toString());
-		System.out.print(renderTarget.getColorTexture().toString());
-		System.out.print(renderTarget.getDepthTexture().toString());
-		
-		cam = cam.withPosition(new Vec3D(5, 5, 2.5))
-				.withAzimuth(Math.PI * 1.25)
-				.withZenith(Math.PI * -0.125);
-		
+		String[] shaderNames = {
+				"/lvl2advanced/p05pipeline/p04moreShaders/start.frag",
+				"/lvl2advanced/p05pipeline/p04moreShaders/func.frag",
+				"/lvl2advanced/p05pipeline/p04moreShaders/func.vert",
+				"/lvl2advanced/p05pipeline/p04moreShaders/start.vert",
+				"/lvl2advanced/p05pipeline/p04moreShaders/empty.vert"
+				};
+		int[] shaderTypes = {
+				GL_FRAGMENT_SHADER,
+				GL_FRAGMENT_SHADER,
+				GL_VERTEX_SHADER,
+				GL_VERTEX_SHADER,
+				GL_VERTEX_SHADER
+				};
 		try {
-			texture = new OGLTexture2D("textures/bricks.jpg");
+			texture = new OGLTexture2D("textures/mosaic.jpg");
+			texture2 = new OGLTexture2D("textures/testTexture.jpg");
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		textureViewer = new OGLTexture2D.Viewer();
+		shaderProgram = ShaderUtils.loadProgramMultiple(shaderNames, shaderTypes, (shaderProgram)->{}); 
+		
+		cameraPosition = new Vec3D(5, 5, 2.5);
+		cam = cam.withPosition(new Vec3D(0, 0, 0))
+				.withAzimuth(Math.PI * 1.25)
+				.withZenith(Math.PI * -0.125)
+				.withFirstPerson(false)
+				.withRadius(5);
+		
+		
+		glUseProgram(this.shaderProgram);
+		
+		locValue = glGetUniformLocation(shaderProgram, "value");
 		textRenderer = new OGLTextRenderer(width, height);
+		textureViewer = new OGLTexture2D.Viewer();
+		
 }
 	
 	@Override
 	public void display() {
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
+		String text = new String(this.getClass().getName() + ": [LMB] camera, WSAD, value: " + value);
+
+		glViewport(0, 0, width, height);
 		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+		
+		// set the current shader to be used
 		glUseProgram(shaderProgram); 
 		
-		// set our render target (texture)
-		renderTarget.bind();
-
-		glClearColor(0.7f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+		locMat = glGetUniformLocation(shaderProgram, "mat");
+		glUniformMatrix4fv(locMat, false,
+				ToFloatArray.convert(cam.getViewMatrix().mul(proj)));
+		
+		glUniform1f(locValue,value);
 		
 		texture.bind(shaderProgram, "textureID", 0);
-		
-		glUniformMatrix4fv(locMat, false,
-				ToFloatArray.convert(cam.getViewMatrix().mul(proj).mul(new Mat4Scale((double)width / height, 1, 1))));
+		texture2.bind(shaderProgram, "textureID2", 1);
 		
 		// bind and draw
 		buffers.draw(GL_TRIANGLES, shaderProgram);
 		
-		textureColor1 = renderTarget.getColorTexture(0);
-		textureColor2 = renderTarget.getColorTexture(1);
-		textureDepth = renderTarget.getDepthTexture();
-		
-		
-		// set the default render target (screen)
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, width, height);
-
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-		
-		//texture.bind(shaderProgram, "textureID", 0);
-		textureDepth.bind(shaderProgram, "textureID", 0);
-		textureColor1.bind(shaderProgram, "textureID", 0);
-		
-		glUniformMatrix4fv(locMat, false,
-				ToFloatArray.convert(cam.getViewMatrix().mul(proj)));
-		buffers.draw(GL_TRIANGLES, shaderProgram);
-		
-		String text = new String(this.getClass().getName() + ": [LMB] camera, WSAD");
-		
-		glUseProgram(0); 
-		textureViewer.view(textureColor1, -1, 0, 0.5f, height / (double) width);
-		textureViewer.view(textureColor2, -1, -0.5, 0.5, height / (double) width);
-		textureDepth.bind();
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
-		textureViewer.view(textureDepth, -1, -1, 0.5, height / (double) width);
+		textureViewer.view(texture, -1, -1, 0.5);
+		textureViewer.view(texture2, -1, -0.5, 0.5);
 		
 		textRenderer.clear();
 		textRenderer.addStr2D(3, 20, text);
 		textRenderer.addStr2D(width-90, height-3, " (c) PGRF UHK");
 		textRenderer.draw();
+		
 	}
 }

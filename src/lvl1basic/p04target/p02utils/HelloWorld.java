@@ -24,9 +24,13 @@ import java.nio.IntBuffer;
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_NONE;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glTexParameteri;
 import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL14.GL_TEXTURE_COMPARE_MODE;
 import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
@@ -202,7 +206,7 @@ public class HelloWorld {
 
 		// Make the window visible
 		glfwShowWindow(window);
-		
+
 		// This line is critical for LWJGL's interoperation with GLFW's
 		// OpenGL context, or any context that is managed externally.
 		// LWJGL detects the context that is current in the current thread,
@@ -210,19 +214,21 @@ public class HelloWorld {
 		// bindings available for use.
 		GL.createCapabilities();
 
+		GLUtil.setupDebugMessageCallback();
+
 		OGLUtils.printOGLparameters();
 		
 		glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
 		createBuffers();
-		
+
 		shaderProgram = ShaderUtils.loadProgram("/lvl1basic/p04target/p02utils/texture");
-		
+
 		glUseProgram(this.shaderProgram);
 		
 		locMat = glGetUniformLocation(shaderProgram, "mat");
 		
-		renderTarget = new OGLRenderTarget(512, 512);
+		renderTarget = new OGLRenderTarget(512, 512,1);
 
 		cam = cam.withPosition(new Vec3D(5, 5, 2.5))
 				.withAzimuth(Math.PI * 1.25)
@@ -234,9 +240,10 @@ public class HelloWorld {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
+
 		textureViewer = new OGLTexture2D.Viewer();
 		
 		textRenderer = new OGLTextRenderer(width, height);	
@@ -308,13 +315,9 @@ public class HelloWorld {
 		// Run the rendering loop until the user has attempted to close
 		// the window or has pressed the ESCAPE key.
 		while ( !glfwWindowShouldClose(window) ) {
-			
+
+			//glEnable(GL_DEPTH_TEST);
 			glViewport(0, 0, width, height);
-			
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-			
-			// set the current shader to be used
-			glUseProgram(shaderProgram); 
 			
 			// set our render target (texture)
 			renderTarget.bind();
@@ -341,16 +344,23 @@ public class HelloWorld {
 			//renderTarget.bindColorTexture(shaderProgram, "textureID", 0);
 			renderTarget.getColorTexture().bind(shaderProgram, "textureID", 0);
 			// use the depth buffer from the previous draw as a texture for the next
-			//renderTarget.bindDepthTexture(shaderProgram, "textureID", 0);
+			renderTarget.bindDepthTexture(shaderProgram, "textureID", 0);
 
 			glUniformMatrix4fv(locMat, false,
 					ToFloatArray.convert(cam.getViewMatrix().mul(proj)));
 			buffers.draw(GL_TRIANGLES, shaderProgram);
 			
 			String text = new String(this.getClass().getName() + ": [LMB] camera, WSAD");
-			
+
+			//OGLTexture2D depthTexture = renderTarget.getDepthTexture();
+			//depthTexture.bind();
+			//glTexParameteri(GL_TEXTURE_2D,
+			//		GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
 			textureViewer.view(texture, -1, -1, 0.5);
 			textureViewer.view(renderTarget.getColorTexture(), -1, -0.5, 0.5);
+			renderTarget.getDepthTexture().bind();
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 			textureViewer.view(renderTarget.getDepthTexture(), -1, 0, 0.5);
 			
 			textRenderer.clear();

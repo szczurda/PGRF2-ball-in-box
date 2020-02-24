@@ -1,8 +1,5 @@
 package lvl2advanced.p01gui.p03swing;
 
-import static org.lwjgl.glfw.GLFW.glfwWaitEvents;
-
-import java.awt.Frame;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
@@ -11,12 +8,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import lvl2advanced.p01gui.p02threads.LwjglWindowThread;
 
 public class AppWindow extends JFrame{
 	private JPanel contentPane;

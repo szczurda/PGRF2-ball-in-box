@@ -1,6 +1,5 @@
 package lvl2advanced.p03texture.p04filtering;
 
-
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
@@ -48,7 +47,7 @@ public class Renderer extends AbstractRenderer{
 	double ox, oy;
 	boolean mouseButton1 = false;
 	
-OGLBuffers buffers;
+	OGLBuffers buffers;
 	
 	int shaderProgram, locMat, locHeight;
 
@@ -299,6 +298,9 @@ OGLBuffers buffers;
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		texture.bind();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		// glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP,
 		// GL_TRUE); //removed from GL 3.1 and above.
@@ -314,6 +316,9 @@ OGLBuffers buffers;
 					}
 
 		textureGrid = new OGLTexture2D(imageGrid);
+		textureGrid.bind();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// coloring first MIP level

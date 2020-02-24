@@ -154,7 +154,8 @@ public class Renderer extends AbstractRenderer{
 		for (int dim = 0; dim < 3; dim++) {
 			glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, dim, val);
 			System.out.println("GL_MAX_COMPUTE_WORK_GROUP_SIZE [" + dim + "] : " + val[0]);
-		}textRenderer = new OGLTextRenderer(width, height);
+		}
+		textRenderer = new OGLTextRenderer(width, height);
 }
 	
 	@Override

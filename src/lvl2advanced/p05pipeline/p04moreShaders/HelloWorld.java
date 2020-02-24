@@ -1,28 +1,24 @@
-package lvl1basic.p01start.p04utils;
+package lvl2advanced.p05pipeline.p04moreShaders;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
 import lwjglutils.ShaderUtils;
-import lwjglutils.OGLBuffers;
 import lwjglutils.OGLUtils;
 
-import java.nio.IntBuffer;
+import java.nio.*;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.glViewport;
-import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.system.MemoryStack.*;
 import static org.lwjgl.system.MemoryUtil.*;
-
 /**
  * GLSL sample:<br/>
  * Read and compile shader from files "/shader/glsl01/start.*" using ShaderUtils
  * class in oglutils package 
- * Manage (create, bind, draw) vertex and index buffers using OGLBuffers class
- * in oglutils package<br/>
  * Requires LWJGL3
  * 
  * @author PGRF FIM UHK
@@ -36,13 +32,8 @@ public class HelloWorld {
 
 	// The window handle
 	private long window;
+	int shaderProgram;
 	
-	OGLBuffers buffers;
-	
-	int shaderProgram, locTime;
-	
-	float time = 0;
-
 	private void init() {
 		// Setup an error callback. The default implementation
 		// will print the error message in System.err.
@@ -101,7 +92,7 @@ public class HelloWorld {
 		// Make the OpenGL context current
 		glfwMakeContextCurrent(window);
 		// Enable v-sync
-		glfwSwapInterval(1);
+		glfwSwapInterval(0);
 
 		// Make the window visible
 		glfwShowWindow(window);
@@ -120,50 +111,34 @@ public class HelloWorld {
 		// Set the clear color
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-		createBuffers();
-		System.out.println(buffers);
+		String[] shaderNames = {
+				"/lvl2advanced.p05pipeline.p04moreShaders/start.frag",
+				"/lvl2advanced.p05pipeline.p04moreShaders/func.frag",
+				"/lvl2advanced.p05pipeline.p04moreShaders/func.vert",
+				"/lvl2advanced.p05pipeline.p04moreShaders/start.vert",
+				"/lvl2advanced.p05pipeline.p04moreShaders/empty.vert"
+				};
+		int[] shaderTypes = {
+				GL_FRAGMENT_SHADER,
+				GL_FRAGMENT_SHADER,
+				GL_VERTEX_SHADER,
+				GL_VERTEX_SHADER,
+				GL_VERTEX_SHADER
+				};
 		
-		shaderProgram = ShaderUtils.loadProgram("/lvl1basic/p01start/uniform.vert",
-				"/lvl1basic/p01start/uniform.frag",
-				null,null,null,null); 
+		shaderProgram = ShaderUtils.loadProgramMultiple(shaderNames, shaderTypes, (shaderProgram)->{}); 
 		
-		// Shader program set
+		//shorter version of loading shader program
+		//shaderProgram = ShaderUtils.loadProgram("/lvl1basic/p01start/start"); 
+		
+		//for older GLSL version 
+		//shaderProgram = ShaderUtils.loadProgram("/lvl1basic/p01start/startForOlderGLSL");
+		
+        // Shader program set
 		glUseProgram(this.shaderProgram);
-		
-		// internal OpenGL ID of a shader uniform (constant during one draw call
-		// - constant value for all processed vertices or pixels) variable
-		locTime = glGetUniformLocation(shaderProgram, "time");
 
 	}
-	
-	void createBuffers() {
-		float[] vertexBufferData = {
-			-1, -1, 	0.7f, 0, 0, 
-			 1,  0,		0, 0.7f, 0,
-			 0,  1,		0, 0, 0.7f 
-		};
-		int[] indexBufferData = { 0, 1, 2 };
-
-		// vertex binding description, concise version
-		OGLBuffers.Attrib[] attributes = {
-				new OGLBuffers.Attrib("inPosition", 2), // 2 floats
-				new OGLBuffers.Attrib("inColor", 3) // 3 floats
-		};
-		buffers = new OGLBuffers(vertexBufferData, attributes,
-				indexBufferData);
-		// the concise version requires attributes to be in this order within
-		// vertex and to be exactly all floats within vertex
-
-/*		full version for the case that some floats of the vertex are to be ignored 
- * 		(in this case it is equivalent to the concise version): 
- 		OGLBuffers.Attrib[] attributes = {
-				new OGLBuffers.Attrib("inPosition", 2, 0), // 2 floats, at 0 floats from vertex start
-				new OGLBuffers.Attrib("inColor", 3, 2) }; // 3 floats, at 2 floats from vertex start
-		buffers = new OGLBuffers(gl, vertexBufferData, 5, // 5 floats altogether in a vertex
-				attributes, indexBufferData); 
-*/
-	}
-
+    
 	private void loop() {
 		// Run the rendering loop until the user has attempted to close
 		// the window or has pressed the ESCAPE key.
@@ -173,16 +148,15 @@ public class HelloWorld {
 			
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-			// set the current shader to be used, could have been done only once (in
-			// init) in this sample (only one shader used)
-			glUseProgram(shaderProgram); 
-			// to use the default shader of the "fixed pipeline", call
-			// glUseProgram(0);
-			time += 0.1;
-			glUniform1f(locTime, time); // correct shader must be set before this
-			
-			// bind and draw
-			buffers.draw(GL_TRIANGLES, shaderProgram);
+			// Rendering triangle by fixed pipeline
+			glBegin(GL_TRIANGLES);
+			glColor3f(1f, 0f, 0f);
+			glVertex2f(-1f, -1);
+			glColor3f(0f, 1f, 0f);
+			glVertex2f(1, 0);
+			glColor3f(0f, 0f, 1f);
+			glVertex2f(0, 1);
+			glEnd();
 			
 			glfwSwapBuffers(window); // swap the color buffers
 
@@ -207,7 +181,6 @@ public class HelloWorld {
 			t.printStackTrace();
 		} finally {
 			// Terminate GLFW and free the error callback
-			glDeleteProgram(shaderProgram);
 			glfwTerminate();
 			glfwSetErrorCallback(null).free();
 		}

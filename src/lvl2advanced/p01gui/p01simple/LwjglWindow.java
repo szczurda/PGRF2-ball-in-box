@@ -45,6 +45,8 @@ public class LwjglWindow {
 		DEBUG = debug;
 		WIDTH = width;
 		HEIGHT = height;
+		if (DEBUG) 
+			System.err.println("Run in debugging mode");
 		run();
 	}
 	
@@ -92,7 +94,55 @@ public class LwjglWindow {
 		glfwSetMouseButtonCallback(window,renderer.getMouseCallback());
 		glfwSetCursorPosCallback(window,renderer.getCursorCallback());
 		glfwSetScrollCallback(window,renderer.getScrollCallback());
-								
+		
+		if (DEBUG)
+			glfwSetErrorCallback(new GLFWErrorCallback() {
+	            GLFWErrorCallback delegate = GLFWErrorCallback.createPrint(System.err);
+
+	            @Override
+	            public void invoke(int error, long description) {
+	                if (error == GLFW_VERSION_UNAVAILABLE)
+	                    System.err.println("GLFW_VERSION_UNAVAILABLE: This demo requires OpenGL 2.0 or higher.");
+	                if (error == GLFW_NOT_INITIALIZED)
+	                    System.err.println("");
+	                if (error == GLFW_NO_CURRENT_CONTEXT)
+	                    System.err.println("GLFW_NO_CURRENT_CONTEXT");
+				    if (error == GLFW_INVALID_ENUM)
+				        System.err.println("GLFW_INVALID_ENUM");
+				    if (error == GLFW_INVALID_VALUE)
+				        System.err.println("GLFW_INVALID_VALUE");
+				    if (error == GLFW_OUT_OF_MEMORY)
+				        System.err.println("GLFW_OUT_OF_MEMORY");
+				    if (error == GLFW_API_UNAVAILABLE)
+				        System.err.println("GLFW_API_UNAVAILABLE");
+				    if (error == GLFW_VERSION_UNAVAILABLE)
+				        System.err.println("GLFW_VERSION_UNAVAILABLE");
+				    if (error == GLFW_PLATFORM_ERROR)
+				        System.err.println("GLFW_PLATFORM_ERROR");
+				    if (error == GLFW_FORMAT_UNAVAILABLE)
+				        System.err.println("GLFW_FORMAT_UNAVAILABLE");
+				    if (error == GLFW_FORMAT_UNAVAILABLE)
+				        System.err.println("GLFW_FORMAT_UNAVAILABLE");
+	    
+	                delegate.invoke(error, description);
+	            }
+
+	            @Override
+	            public void free() {
+	                delegate.free();
+	            }
+	        });
+		//TODO
+		/*other debug modes, some may have a very negative impact on performance
+		 * see https://github.com/LWJGL/lwjgl3-wiki/wiki/2.5.-Troubleshooting
+		 
+		Configuration.DEBUG.set(true);
+		Configuration.DEBUG_LOADER.set(true);
+		Configuration.DEBUG_MEMORY_ALLOCATOR.set(true);
+		Configuration.DEBUG_STACK.set(true);
+		Configuration.DEBUG_STREAM.set(true);
+		*/
+		
 		// Get the thread stack and push a new frame
 		try ( MemoryStack stack = stackPush() ) {
 			IntBuffer pWidth = stack.mallocInt(1); // int*
