@@ -182,12 +182,27 @@ public class Renderer extends AbstractRenderer {
         System.out.println("Loading textures...");
         try {
             texture = new OGLTexture2D("textures/sky.jpg");
-            textureCube[0] = new OGLTexture2D("textures/skybox.jpg");
+            /*textureCube[0] = new OGLTexture2D("textures/skybox.jpg");
             textureCube[1] = new OGLTexture2D("textures/skybox2.jpg");
             textureCube[2] = new OGLTexture2D("textures/skybox3.jpg");
             textureCube[3] = new OGLTexture2D("textures/skybox4.jpg");
             textureCube[4] = new OGLTexture2D("textures/skybox5.jpg");
             textureCube[5] = new OGLTexture2D("textures/skybox6.jpg");
+            */
+
+            /*textureCube[0] = new OGLTexture2D("textures/skyBox_right.jpg");
+            textureCube[1] = new OGLTexture2D("textures/skyBox_left.jpg");
+            textureCube[2] = new OGLTexture2D("textures/skyBox_top.jpg");
+            textureCube[3] = new OGLTexture2D("textures/skyBox_bottom.jpg");
+            textureCube[4] = new OGLTexture2D("textures/skyBox_front.jpg");
+            textureCube[5] = new OGLTexture2D("textures/skyBox_back.jpg");
+            */
+            textureCube[0] = new OGLTexture2D("textures/snow_positive_x.jpg");
+            textureCube[1] = new OGLTexture2D("textures/snow_negative_x.jpg");
+            textureCube[2] = new OGLTexture2D("textures/snow_positive_y.jpg");
+            textureCube[3] = new OGLTexture2D("textures/snow_negative_y.jpg");
+            textureCube[4] = new OGLTexture2D("textures/snow_positive_z.jpg");
+            textureCube[5] = new OGLTexture2D("textures/snow_negative_z.jpg");
         } catch (IOException e) {
             e.printStackTrace();
         }
