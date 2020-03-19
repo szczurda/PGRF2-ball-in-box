@@ -93,6 +93,12 @@ public class HelloWorld {
 		System.out.println("OpenGL renderer " + glGetString(GL_RENDERER));
 		System.out.println("OpenGL extension " + glGetString(GL_EXTENSIONS));
 
+		System.out.println("Red bits " + glGetInteger(GL_RED_BITS));
+		System.out.println("Get bits " + glGetInteger(GL_GREEN_BITS));
+		System.out.println("Blue bits " + glGetInteger(GL_BLUE_BITS));
+		System.out.println("Alpha bits " + glGetInteger(GL_ALPHA_BITS));
+		System.out.println("Depth bits " + glGetInteger(GL_DEPTH_BITS));
+		System.out.println("Stencil bits " + glGetInteger(GL_STENCIL_BITS));
 		// Set the clear color
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 

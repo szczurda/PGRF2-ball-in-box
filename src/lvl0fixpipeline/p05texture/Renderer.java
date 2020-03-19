@@ -312,10 +312,10 @@ public class Renderer extends AbstractRenderer {
             glVertex3f(0.0f, 0.0f, 0.0f);
             glEnd();
 
-            //static object with rotated texture
             glMatrixMode(GL_MODELVIEW);
             glPopMatrix();
 
+            //static object with rotated texture
             glMatrixMode(GL_TEXTURE);
             glLoadIdentity();
             glRotatef(uhel / 2, 0, 0, 1);
@@ -339,19 +339,17 @@ public class Renderer extends AbstractRenderer {
         glColor3fv(color);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_DEPTH_TEST);
-        String text = this.getClass().getName() + ": [lmb] move, [M]ode, a[N]im ";
-        if (per)
-            text += ", [P]ersp ";
-        else
-            text += ", [p]ersp ";
+        String text = this.getClass().getName() + ": [lmb] move, [M]ode";
+        if (mode % 2 != 0) {
+            text += ", a[N]im";
+            text += per?", [P]ersp ":", [p]ersp";
 
+
+            textureViewer.view(texture2, 0.5, -1, 0.5);
+        }
         textInfo += "[T]exture map: " + textureMode;
         textInfo += ", [A]pplication: " + textureApp;
 
-
-        if (mode % 2 != 0) {
-            textureViewer.view(texture2, 0.5, -1, 0.5);
-        }
         textureViewer.view(texture1, -1, -1, 0.5);
         //create and draw text
         textRenderer.clear();
