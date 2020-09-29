@@ -1,19 +1,14 @@
 package lvl1basic.p03texture.p03multiple;
+import lwjglutils.*;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
-import lwjglutils.ShaderUtils;
-import lwjglutils.ToFloatArray;
 import transforms.Camera;
 import transforms.Mat4;
 import transforms.Mat4PerspRH;
 import transforms.Vec3D;
-import lwjglutils.OGLBuffers;
-import lwjglutils.OGLTextRenderer;
-import lwjglutils.OGLTexture2D;
-import lwjglutils.OGLUtils;
 
 import java.io.IOException;
 import java.nio.DoubleBuffer;
@@ -228,7 +223,8 @@ public class HelloWorld {
 
 		texture1 = new OGLTexture2D("textures/mosaic.jpg");
 		texture2 = new OGLTexture2D("textures/testTexture.jpg");
-		
+		texture2.flipY(new OGLTexImageFloat.Format(4));
+
 		cam = cam.withPosition(new Vec3D(5, 5, 2.5))
 				.withAzimuth(Math.PI * 1.25)
 				.withZenith(Math.PI * -0.125);

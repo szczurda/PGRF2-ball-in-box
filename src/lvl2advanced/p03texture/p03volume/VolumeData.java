@@ -17,11 +17,12 @@ import lwjglutils.OGLTextureVolume;
 
 public class VolumeData {
 	public enum DATA_SET {
-		CT_head_byte, MRI_head_byte, CT_head2_byte, PET_mouse_short, Adam_color_RGB, Func_byte
+		CT_head_byte, MRI_head_byte, CT_head2_byte, PET_mouse_short, Beetle_short, Adam_color_RGB, Func_byte
 	}
 
 	private static byte[] readVolumeData(String fileName, int x, int y, int z,
-			int c) {
+			int c, int headerSize) {
+		byte[] header = null;
 		byte[] buffer = null;
 		System.out.print("Reading volume data file: " + fileName);
 
@@ -37,9 +38,10 @@ public class VolumeData {
 			}
 
 			bis = new BufferedInputStream(is);
-			
+
+			header = new byte[headerSize];
 			buffer = new byte[x * y * z * c];
-			System.out.print(" length " + bis.read(buffer));
+			System.out.print(" header " + bis.read(header) + " length " + bis.read(buffer));
 			 is.close();
 			 bis.close();
 			System.out.println(" ... OK");
@@ -54,8 +56,6 @@ public class VolumeData {
 	/**
 	 * Read volume data sets and convert it to the OGLTexture 
 	 * 
-	 * @param gl
-	 *            GL context
 	 * @param dataSet
 	 *            volume data set selection
 	 * @return
@@ -65,7 +65,7 @@ public class VolumeData {
 		switch (dataSet) {
 		case CT_head_byte: // CT head, byte per voxel
 		{
-			byte[] data = readVolumeData("/vol/hlava_reduced.raw", 56, 68, 85, 1);
+			byte[] data = readVolumeData("/vol/hlava_reduced.raw", 56, 68, 85, 1, 0);
 			if (data == null)
 				return null;
 			OGLTexImageByte volumeData = new OGLTexImageByte(56, 68, 85,
@@ -74,7 +74,7 @@ public class VolumeData {
 		}
 		case MRI_head_byte: // MRI head, byte per voxel
 		{
-			byte[] data = readVolumeData("/vol/mri_head_reduced.raw", 44, 59, 46, 1);
+			byte[] data = readVolumeData("/vol/mri_head_reduced.raw", 44, 59, 46, 1, 0);
 			if (data == null)
 				return null;
 			OGLTexImageByte volumeData = new OGLTexImageByte( 44, 59, 46,
@@ -83,44 +83,74 @@ public class VolumeData {
 		}
 		case CT_head2_byte: // CT head, byte per voxel
 		{
-			byte[] data = readVolumeData("/vol/head256_reduced.raw", 64, 64, 56, 1);
+			byte[] data = readVolumeData("/vol/head256_reduced.raw", 64, 64, 56, 1, 0);
 			if (data == null)
 				return null;
 			OGLTexImageByte volumeData = new OGLTexImageByte(64, 64, 56,
 					new OGLTexImageByte.FormatIntensity(), data);
 			return new OGLTextureVolume(volumeData);
 		}
-		case PET_mouse_short: // PET short per voxel
-		{
-			byte[] data = readVolumeData("/vol/mouse0_reduced.raw", 37, 37, 69, 2);
-			if (data == null)
-				return null;
-			float[] floatData = new float[data.length / 2];
-			float max = -10000;
-			float min = 10000;
-			for (int i = 0; i < floatData.length; i++) {
-				floatData[i] = (((int) (0xff & data[2 * i])) | ((int) data[2 * i + 1] << 8));
-				if (max < floatData[i])
-					max = floatData[i];
-				if (min > floatData[i])
-					min = floatData[i];
+			case PET_mouse_short: // PET short per voxel
+			{
+				byte[] data = readVolumeData("/vol/mouse0_reduced.raw", 37, 37, 69, 2, 0);
+				if (data == null)
+					return null;
+				//float[] floatData = new float[data.length / 2];
+				float[] floatData = new float[data.length / 2] ;
+				float max = -10000;
+				float min = 10000;
+				for (int i = 0; i < floatData.length; i++) {
+					floatData[i] = (((int) (0xff & data[2 * i])) | ((int) data[2 * i + 1] << 12));
+					if (max < floatData[i])
+						max = floatData[i];
+					if (min > floatData[i])
+						min = floatData[i];
+				}
+				//System.out.println(max + " " + min);
+				max = 1000;
+				for (int i = 0; i < floatData.length; i++) {
+					if (floatData[i] > max)
+						floatData[i] = floatData[i] / max;
+					else
+						floatData[i] = floatData[i] / max;
+				}
+				OGLTexImageFloat volumeData = new OGLTexImageFloat(37, 37, 69,
+						new OGLTexImageFloat.FormatIntensity(), floatData);
+				return new OGLTextureVolume(volumeData);
 			}
-			//System.out.println(max + " " + min);
-			max = 1000;
-			for (int i = 0; i < floatData.length; i++) {
-				if (floatData[i] > max)
-					floatData[i] = floatData[i] / max;
-				else
-					floatData[i] = floatData[i] / max;
-			}
-			OGLTexImageFloat volumeData = new OGLTexImageFloat(37, 37, 69,
-					new OGLTexImageFloat.FormatIntensity(), floatData);
-			return new OGLTextureVolume(volumeData);
-		}
 
-		case Adam_color_RGB: // Adam head color data, 3 bytes per voxel
+			case Beetle_short: // BEETLE short per voxel
+			{
+				byte[] data = readVolumeData("/vol/beetle.raw", 832, 832, 494, 2, 6);
+				if (data == null)
+					return null;
+				//float[] floatData = new float[data.length / 2];
+				float[] floatData = new float[data.length / 2] ;
+				float max = -10000;
+				float min = 10000;
+				for (int i = 0; i < floatData.length; i++) {
+					floatData[i] = (((int) (0xff & data[2 * i])) | ((int) data[2 * i + 1] << 12));
+					if (max < floatData[i])
+						max = floatData[i];
+					if (min > floatData[i])
+						min = floatData[i];
+				}
+				max = 2<<12;
+				//System.out.println(max + " " + min);
+				for (int i = 0; i < floatData.length; i++) {
+					if (floatData[i] > max)
+						floatData[i] = floatData[i] / max;
+					else
+						floatData[i] = floatData[i] / max;
+				}
+				OGLTexImageFloat volumeData = new OGLTexImageFloat(832, 832, 494,
+						new OGLTexImageFloat.FormatIntensity(), floatData);
+				System.out.println(volumeData);
+				return new OGLTextureVolume(volumeData);
+			}
+			case Adam_color_RGB: // Adam head color data, 3 bytes per voxel
 		{
-			byte[] data = readVolumeData("/vol/AheadC_reduced.raw", 47, 61, 57, 3);
+			byte[] data = readVolumeData("/vol/AheadC_reduced.raw", 47, 61, 57, 3, 0);
 			if (data == null)
 				return null;
 			byte[] colorData = new byte[data.length];

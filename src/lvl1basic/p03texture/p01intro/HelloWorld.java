@@ -302,24 +302,28 @@ public class HelloWorld {
             fc.close();
             fis.close();
         } else {
-            buffer = BufferUtils.createByteBuffer(bufferSize);
-            InputStream source = url.openStream();
-            if (source == null)
-                throw new FileNotFoundException(resource);
-            try {
-                byte[] buf = new byte[8192];
-                while (true) {
-                    int bytes = source.read(buf, 0, buf.length);
-                    if (bytes == -1)
-                        break;
-                    if (buffer.remaining() < bytes)
-                        buffer = resizeBuffer(buffer, buffer.capacity() * 2);
-                    buffer.put(buf, 0, bytes);
-                }
-                buffer.flip();
-            } finally {
-                source.close();
-            }
+			buffer = BufferUtils.createByteBuffer(bufferSize);
+			InputStream source = url.openStream();
+			if (source == null)
+				throw new FileNotFoundException(resource);
+			try {
+				byte[] buf = new byte[bufferSize];
+				while (true) {
+					int bytes = source.read(buf, 0, buf.length);
+					if (bytes == -1)
+						break;
+					if (buffer.remaining() < bytes) {
+						int newCapacity = buffer.capacity();
+						while ((buffer.position() + bytes) > newCapacity)
+							newCapacity *= 2;
+						buffer = resizeBuffer(buffer, newCapacity);
+					}
+					buffer.put(buf, 0, bytes);
+				}
+				buffer.flip();
+			} finally {
+				source.close();
+			}
         }
         return buffer;
     }

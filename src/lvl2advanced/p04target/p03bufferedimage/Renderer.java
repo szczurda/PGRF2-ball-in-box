@@ -331,7 +331,10 @@ OGLBuffers buffers;
 				System.out.println(textureColor);
 				System.out.println(imgFloat);
 				System.out.println(texRGB);
-				
+
+				//flip y coordinate do to BufferedImage inverse orientation
+				texRGB.flipY(imgFloat.getFormat());
+
 				// get BufferedImage
 				BufferedImage img = texRGB.toBufferedImage();
 				
@@ -350,6 +353,10 @@ OGLBuffers buffers;
 				
 				// update texture data
 				texRGB.fromBufferedImage(img);
+
+				//flip y coordinate back
+				texRGB.flipY(imgFloat.getFormat());
+
 		}
 		
 		// set the default render target (screen)
