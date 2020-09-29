@@ -109,13 +109,14 @@ public class Renderer extends AbstractRenderer {
         // surface material setting - diffuse reflection
         float[] mat_dif = new float[]{0, 1, 1, 1};
         // surface material setting - specular reflection
-        float[] mat_spec = new float[]{0.3f, 0, 0, 1};
+        float[] mat_spec = new float[]{1, 0, 0, 1};
         // surface material setting - ambient reflection
         float[] mat_amb = new float[]{0.1f, 0.1f, 0, 1};
 
         glMaterialfv(GL_FRONT, GL_AMBIENT, mat_amb);
         glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_dif);
         glMaterialfv(GL_FRONT, GL_SPECULAR, mat_spec);
+        glMaterialf(GL_FRONT, GL_SHININESS, 10);
         // gl.glMaterialfv(GL_FRONT, GL_EMISSION, mat);
 
         // light source setting - diffuse component
@@ -123,7 +124,7 @@ public class Renderer extends AbstractRenderer {
         // light source setting - ambient component
         float[] light_amb = new float[]{1, 1, 1, 1};
         // light source setting - specular component
-        float[] light_spec = new float[]{0.3f, 0, 0, 1};
+        float[] light_spec = new float[]{1, 1, 1, 1};
 
         glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, light_dif);
@@ -131,26 +132,46 @@ public class Renderer extends AbstractRenderer {
     }
 
     private void drawScene() {
+        glEnable(GL_NORMALIZE);
         glFrontFace(GL_CCW);
-        glLoadIdentity();
-        glTranslatef(0, 20, 0);
+        glPushMatrix();
+        glTranslatef(20, 0, 0);
         glutSolidSphere(5, 30, 30);
+        glPopMatrix();
 
-        glLoadIdentity();
+        glPushMatrix();
         glTranslatef(0, 0, 0);
         glutSolidSphere(5, 30, 30);
+        glPopMatrix();
 
-        glLoadIdentity();
-        glTranslatef(0, -20, 0);
+        glPushMatrix();
+        glTranslatef(-20, 0, 0);
         glutSolidSphere(5, 30, 30);
+        glPopMatrix();
 
-        glLoadIdentity();
-        glTranslatef(0, 20, -15);
+        glPushMatrix();
+        glTranslatef(20, -15, 0);
         glutSolidCube(5);
+        glPopMatrix();
 
-        glLoadIdentity();
-        glTranslatef(0, -20, -15);
+        glPushMatrix();
+        glTranslatef(-20, -15, 0);
         glutSolidCube(5);
+        glPopMatrix();
+    }
+
+    public void drawAxis(){
+        glBegin(GL_LINES);
+        glColor3f(1f, 0f, 0f);
+        glVertex3f(0f, 0f, 0f);
+        glVertex3f(100f, 0f, 0f);
+        glColor3f(0f, 1f, 0f);
+        glVertex3f(0f, 0f, 0f);
+        glVertex3f(0f, 100f, 0f);
+        glColor3f(0f, 0f, 1f);
+        glVertex3f(0f, 0f, 0f);
+        glVertex3f(0f, 0f, 100f);
+        glEnd();
     }
 
     @Override
@@ -168,29 +189,30 @@ public class Renderer extends AbstractRenderer {
                     20 * width / (float) height,
                     -20, 20, 0.1f, 200.0f);
 
-        gluLookAt(50, 0, 0, 0, 0, 0, 0, 0, 1);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        gluLookAt(0, 0, 50, 0, 0, 0, 0, 1, 0);
+        drawAxis();
         // nastaveni pozice svetla
         float[] light_position;
         if (!light) {
             // bod v prostoru
-            light_position = new float[]{25, mouseX - width / 2f, height / 2f - mouseY, 1.0f};
+            light_position = new float[]{ mouseX - width / 2f, height / 2f - mouseY, 25, 1.0f};
         } else {
             // smer - umisteni v nekonecnu
-            light_position = new float[]{25, mouseX - width / 2f, height / 2f - mouseY, 0.0f};
+            light_position = new float[]{ mouseX - width / 2f, height / 2f - mouseY, 25, 0.0f};
         }
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
         glFrontFace(GL_CCW);
         glPushMatrix();
-        glLoadIdentity();
         // koule znazornujici bodovy zdroj svetla
-        glTranslatef(25, mouseX - width / 2f, height / 2f - mouseY);
+        glTranslatef(mouseX - width / 2f, height / 2f - mouseY, 25);
         glColor3f(1.0f, 1.0f, 0.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glutSolidSphere(1, 10, 10);
+        glPopMatrix();
 
 
         //orezani odvracenych ploch
@@ -224,15 +246,16 @@ public class Renderer extends AbstractRenderer {
         // zobrazeni telesa bez osvetleni
         glPolygonMode(GL_FRONT, GL_LINE);
         glPolygonMode(GL_BACK, GL_POINT);
-        glLoadIdentity();
+        glPushMatrix();
         glColor3f(1.0f, 0f, 1.0f);
-        glTranslatef(0, 10, 15);
+        glTranslatef( 10, 15, 0);
         glRotatef(90, 1, 0, 0);
         glutWireSphere(5, 13, 12);
+        glPopMatrix();
 
-        glLoadIdentity();
+        glPushMatrix();
         glColor3f(0.0f, 1.f, 0f);
-        glTranslatef(0, -10, 15);
+        glTranslatef(-10, 15, 0);
         glRotatef(90, 1, 0, 0);
         glutWireCube(5);
         glPopMatrix();

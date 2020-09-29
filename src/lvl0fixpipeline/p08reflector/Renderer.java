@@ -29,7 +29,7 @@ public class Renderer extends AbstractRenderer {
     private boolean mouseButton3 = false;
     private boolean per = true, flat = false, light = false, spot = false;
     private int wire = 0;
-    private float kA = 0.5f, kD = 0.5f, kS = 0.5f, kH = 1;
+    private float kA = 0.5f, kD = 0.5f, kS = 0.5f, kH = 10;
     private float step = 0.01f;
 
     public Renderer() {
@@ -192,31 +192,35 @@ public class Renderer extends AbstractRenderer {
     private void drawScene() {
         setMaterial(2);
         glFrontFace(GL_CCW);
-        glLoadIdentity();
+        glPushMatrix();
         glTranslatef(-50, 0, 0);
+
         glBegin(GL_QUADS);
         for (int i = -100; i < 100; i++) {
             for (int j = -100; j < 100; j++) {
-                glNormal3f(1, 0, 0);
-                glVertex3f(0, i, j);
-                glVertex3f(0, i + 1, j);
-                glVertex3f(0, i + 1, j + 1);
-                glVertex3f(0, i, j + 1);
+                glNormal3f(0, 0, 1);
+                glVertex3f( i, j, 0);
+                glVertex3f(i + 1, j, 0);
+                glVertex3f(i + 1, j + 1, 0);
+                glVertex3f( i, j + 1, 0);
             }
         }
         glEnd();
+        glPopMatrix();
 
         glEnable(GL_NORMALIZE);
         glFrontFace(GL_CCW);
-        glLoadIdentity();
-        glTranslatef(0, 20, 0);
+        glPushMatrix();
+        glTranslatef(20, 0, 0);
         setMaterial(1);
         glutSolidSphere(5, 30, 30);
+        glPopMatrix();
 
-        glLoadIdentity();
-        glTranslatef(0, -20, 0);
+        glPushMatrix();
+        glTranslatef(-20, 0, 0);
         setMaterial(0);
         glutSolidCube(5);
+        glPopMatrix();
     }
 
     @Override
@@ -242,38 +246,36 @@ public class Renderer extends AbstractRenderer {
                     20 * width / (float) height,
                     -20, 20, 0.1f, 200.0f);
 
-        gluLookAt(50, 0, 0, 0, 0, 0, 0, 0, 1);
-
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        gluLookAt(0, 0, 50, 0, 0, 0, 0, 1, 0);
         // nastaveni pozice svetla
         float[] light_position;
         if (!light) {
             // bod v prostoru
-            light_position = new float[]{25, mouseX - width / 2f, height / 2f - mouseY, 1.0f};
+            light_position = new float[]{ mouseX - width / 2f, height / 2f - mouseY, 25, 1.0f};
         } else {
             // smer - umisteni v nekonecnu
-            light_position = new float[]{25, mouseX - width / 2f, height / 2f - mouseY, 0.0f};
+            light_position = new float[]{ mouseX - width / 2f, height / 2f - mouseY, 25, 0.0f};
         }
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
         //smer reflektoru
-        float[] light_direction = {-1, directX / (float) width - 0.5f, 0.5f - directY / (float) height, 0.0f};
+        float[] light_direction = {directX / (float) width - 0.5f, 0.5f - directY / (float) height, -1, 0.0f};
 
         glFrontFace(GL_CCW);
         glPushMatrix();
-        glLoadIdentity();
 
         glColor3f(1.0f, 1.0f, 0.0f);
         // cara znazornujici smer reflektoru
         if (spot) {
             glBegin(GL_LINES);
-            glVertex3f(25, mouseX - width / 2f, height / 2f - mouseY);
-            glVertex3f(15, light_direction[1] * 10 + mouseX - width / 2f, light_direction[2] * 10 + height / 2f - mouseY);
+            glVertex3f(mouseX - width / 2f, height / 2f - mouseY,25);
+            glVertex3f(light_direction[0] * 10 + mouseX - width / 2f, light_direction[1] * 10 + height / 2f - mouseY, 15);
             glEnd();
         }
 
-        glTranslatef(25, mouseX - width / 2f, height / 2f - mouseY);
+        glTranslatef(mouseX - width / 2f, height / 2f - mouseY, 25);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor3f(1.0f, 1.0f, 0.0f);
         // koule znazornujici bodovy zdroj svetla
@@ -296,15 +298,11 @@ public class Renderer extends AbstractRenderer {
             glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180);
 
         // exponent pri vypoctu ubytku osvetleni
-
         glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 1f);
 
 
-        //light_direction =  new float[]{-25,0,0,0.0f};
-
         glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, light_direction);
 
-        //  glEnable( GL_POLYGON_OFFSET_FILL );
         // zpusob vykresleni privracenych a odvracenych ploch
         wire = wire % 2;
         switch (wire) {
@@ -324,27 +322,15 @@ public class Renderer extends AbstractRenderer {
         float[] color = {1.0f, 1.0f, 1.0f};
         glColor3fv(color);
         glDisable(GL_DEPTH_TEST);
-        String text = this.getClass().getName() + ": [lmb] move, ";
+        String text = this.getClass().getName() + "";
 
-        if (per)
-            text += ", [P]ersp ";
-        else
-            text += ", [p]ersp ";
+        text += (per?", [P]":", [p]")+"ersp";
 
-        if (flat)
-            text += ", Fla[T] ";
-        else
-            text += ", Fla[t] ";
+        text += flat?", Fla[T]":", Fla[t]";
 
-        if (light)
-            text += ", [L]ight infinity position";
-        else
-            text += ", [l]ight infinity position";
+        text += (light?", [L]":", [l]") +"ight infinity position";
 
-        if (spot)
-            text += ", sp[O]t light";
-        else
-            text += ", sp[o]t light";
+        text += spot?", sp[O]t light":", sp[o]t light";
 
         switch (wire) {
             case 0:
@@ -354,14 +340,15 @@ public class Renderer extends AbstractRenderer {
                 text += ", w[i]re";
                 break;
         }
-        String textInfo = "x " + directX + " y " + directY +
-                ", kA = " + kA + ", kS = " + kS + ", kD = " + kD + ", h = " + kH;
+        String textInfo = //"x " + directX + " y " + directY + ", " +
+                "light: k[AQ] = " + kA + ", k[SW] = " + kS + ", k[DE] = " + kD + ", h[FR] = " + kH;
 
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
-        text += String.format(" [lmb] light position (%3.1f, %3.1f, %3.1f, %3.1f)", light_position[0], light_position[1], light_position[2], light_position[3]);
-        text += String.format(" [mmb] light direction (%3.1f, %3.1f, %3.1f, %3.1f)", light_direction[0], light_direction[1], light_direction[2], light_direction[3]);
+        textInfo += String.format(", [lmb] position (%3.1f; %3.1f; %3.1f; %3.1f)", light_position[0], light_position[1], light_position[2], light_position[3]);
+        if (spot)
+            textInfo += String.format(", [mmb] direction (%3.1f; %3.1f; %3.1f; %3.1f)", light_direction[0], light_direction[1], light_direction[2], light_direction[3]);
         //create and draw text
         textRenderer.clear();
         textRenderer.addStr2D(3, 20, text);
