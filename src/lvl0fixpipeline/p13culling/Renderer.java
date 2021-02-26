@@ -1,4 +1,4 @@
-package lvl0fixpipeline.p12moveLight;
+package lvl0fixpipeline.p13culling;
 
 import lvl0fixpipeline.global.AbstractRenderer;
 import lvl0fixpipeline.global.GLCamera;
@@ -33,10 +33,10 @@ public class Renderer extends AbstractRenderer {
 
     private float uhel = 0;
 
+    private boolean wire = true, ccw = true;
+    private int front=0, back=1, model = 1, cull = 0;
     private boolean mouseButton1 = false;
     private boolean per = true, move = true;
-    private boolean light1 = true, light2 = true, light3 = true;
-    private boolean light4 = true, light5 = true, light6 = true;
     private OGLTexture2D texture;
 
     private GLCamera camera;
@@ -59,37 +59,17 @@ public class Renderer extends AbstractRenderer {
 
                 if (action == GLFW_PRESS) {
                     switch (key) {
-                        case GLFW_KEY_P:
-                            per = !per;
-                            break;
-                        case GLFW_KEY_M:
-                            move = !move;
-                            break;
-                        case GLFW_KEY_W:
-                        case GLFW_KEY_S:
-                        case GLFW_KEY_A:
-                        case GLFW_KEY_D:
-                            deltaTrans = 0.001f;
-                            break;
+                        case GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_A, GLFW_KEY_D -> deltaTrans = 0.001f;
+                        case GLFW_KEY_P -> per = !per;
+                        case GLFW_KEY_M -> move = !move;
 
-                        case GLFW_KEY_1:
-                            light1 = !light1;
-                            break;
-                        case GLFW_KEY_2:
-                            light2 = !light2;
-                            break;
-                        case GLFW_KEY_3:
-                            light3 = !light3;
-                            break;
-                        case GLFW_KEY_4:
-                            light4 = !light4;
-                            break;
-                        case GLFW_KEY_5:
-                            light5 = !light5;
-                            break;
-                        case GLFW_KEY_6:
-                            light6 = !light6;
-                            break;
+                        //case GLFW_KEY_V -> wire = !wire;
+                        case GLFW_KEY_V -> model = (++model)%4;
+                        case GLFW_KEY_N -> front = (++front)%3;
+                        case GLFW_KEY_B -> back = (++back)%3;
+                        case GLFW_KEY_C -> cull = ++cull % 4;
+                        case GLFW_KEY_X -> ccw = !ccw;
+
                     }
                 }
                 switch (key) {
@@ -183,10 +163,6 @@ public class Renderer extends AbstractRenderer {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glFrontFace(GL_CW);
-        glPolygonMode(GL_FRONT, GL_FILL);
-        glPolygonMode(GL_BACK, GL_FILL);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
@@ -207,53 +183,30 @@ public class Renderer extends AbstractRenderer {
         azimut = (float) Math.toDegrees(-0.79);
         zenit = (float) Math.toDegrees(-0.65);
         camera.setFirstPerson(true);
-
-        float[] mat_dif = new float[]{1, 1, 1, 1};
-        float[] mat_spec = new float[]{1, 1, 1, 1};
-        float[] mat_amb = new float[]{.1f, .1f, .1f, 1};
-
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_amb);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_dif);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_spec);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, new float[]{0, 0, 0, 1});
-
-        scene();
-        setLight(GL_LIGHT0, 1, 0, 0);
-        setLight(GL_LIGHT1, 0, 1, 0);
-        setLight(GL_LIGHT2, 0, 0, 1);
-        setLight(GL_LIGHT3, 0, 1, 1);
-        setLight(GL_LIGHT4, 1, 1, 0);
-        setLight(GL_LIGHT5, 1, 0, 1);
     }
 
-    private void setLight(int light, float r, float g, float b) {
-        float[] light_amb = new float[]{0, 0, 0, 1};//{ 0.0f*r, .1f*g, .1f*b, 1 };
-        float[] light_dif = new float[]{r, g, b, 1};//{ 0.1f*r, .2f*g, .2f*b, 1 };
-        float[] light_spec = new float[]{0, 0, 0, 1};//{ 0.1f*r, .3f*g, .3f*b, 1 };
-
-        glLightfv(light, GL_AMBIENT, light_amb);
-        glLightfv(light, GL_DIFFUSE, light_dif);
-        glLightfv(light, GL_SPECULAR, light_spec);
-    }
 
     private void scene() {
-        glNewList(1, GL_COMPILE);
-        glColor3f(0, 0, 0);
+        glEnable(GL_TEXTURE_2D);
+        glDisable(GL_LIGHTING);
+        glColor3f(1, 1, 1);
         glPushMatrix();
         texture.bind();
-        glutSolidSphere(5, 16, 16);
+        switch (model) {
+            case 0-> glutWireSphere(5, 16, 16);
+            case 1-> glutSolidSphere(5, 16, 16);
+            case 2-> glutWireCube(5);
+            case 3-> glutSolidCube(5);
+        }
         glPopMatrix();
-        glEndList();
     }
 
     private void drawBall(float r, float g, float b, float x, float y, float z) {
         glPushMatrix();
         glTranslatef(x, y, z);
         glDisable(GL_TEXTURE_2D);
-        glDisable(GL_LIGHTING);
         glColor3f(r, g, b);
         glutWireSphere(1, 8, 8);
-        glEnable(GL_LIGHTING);
         glEnable(GL_TEXTURE_2D);
         glPopMatrix();
     }
@@ -267,8 +220,72 @@ public class Renderer extends AbstractRenderer {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
+
+        String textInfo = "[v] model, fro[n]t face:";
+
+        switch (front) {
+            case 0 -> {
+                glPolygonMode(GL_FRONT, GL_FILL);
+                textInfo += " fill ";
+            }
+            case 1 -> {
+                glPolygonMode(GL_FRONT, GL_LINE);
+                textInfo += " line ";
+            }
+            case 2 -> {
+                glPolygonMode(GL_FRONT, GL_POINT);
+                textInfo += " point ";
+            }
+        }
+
+        textInfo += ", [b]ack face:";
+
+        switch (back) {
+            case 0 -> {
+                glPolygonMode(GL_BACK, GL_FILL);
+                textInfo += " fill ";
+            }
+            case 1 -> {
+                glPolygonMode(GL_BACK, GL_LINE);
+                textInfo += " line ";
+            }
+            case 2 -> {
+                glPolygonMode(GL_BACK, GL_POINT);
+                textInfo += " point ";
+            }
+        }
+
+        String textInfo2 = "[C]ull: ";
+        switch (cull) {
+            case 0 -> {
+                glDisable(GL_CULL_FACE);
+                textInfo2 += "disable, ";
+            }
+            case 1 ->{
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT);
+                textInfo2 += "front, ";
+            }
+            case 2 ->{
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_BACK);
+                textInfo2 += "back, ";
+            }
+            case 3 ->{
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT_AND_BACK);
+                textInfo2 += "front and back, ";
+            }
+        }
+        if (ccw){
+            glFrontFace(GL_CCW);
+            textInfo2 += "CCW[X]cw ";
+        }
+        else {
+            glFrontFace(GL_CW);
+            textInfo2 += "ccw[X]CW ";
+        }
         String text = this.getClass().getName() + ": [lmb] move";
-        String textInfo = "Light: ";
 
         trans += deltaTrans;
 
@@ -286,140 +303,12 @@ public class Renderer extends AbstractRenderer {
         }
 
         glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glDisable(GL_LIGHTING);
-
-        if (light1) {
-            // light moving (rotating) together with object
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT0);
-            glPushMatrix();
-            camera.setMatrix();
-            glRotatef(uhel, 0, 0, 1);
-            float[] light_position = new float[]{8, 8, 8, 1};
-            glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-            drawBall(1, 0, 0, 8, 8, 8);
-            //glCallList(1);
-            glPopMatrix();
-            textInfo += "1";
-        }
-
-        if (light2) {
-            //static light moving together with camera
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT1);
-            glPushMatrix();
-
-            glPushMatrix();
-            glLoadIdentity();
-            glTranslatef(-8f, -8f, -20);
-            drawBall(0, 1, 0, 0, 0, 0);
-            glLightfv(GL_LIGHT1, GL_POSITION, new float[]{0, 0, 0, 1});
-            glPopMatrix();
-
-            camera.setMatrix();
-            glRotatef(uhel, 0, 0, 1);
-            //glCallList(1);
-            glPopMatrix();
-            textInfo += "2";
-        }
-
-        if (light3) {
-            // light moving together with camera and independently to object
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT2);
-            glPushMatrix();
-            glLoadIdentity();
-            camera.setMatrix();
-
-            glPushMatrix();
-            glTranslatef((float) (10 * Math.sin(Math.toRadians(uhel * 5))), 0, 0);
-            glLightfv(GL_LIGHT2, GL_POSITION, new float[]{0, 0, 0, 1});
-            drawBall(0, 0, 1, 0, 0, 0);
-            glPopMatrix();
-
-            glRotatef(uhel, 0, 0, 1);
-            //glCallList(1);
-
-            glPopMatrix();
-            textInfo += "3";
-        }
-
-        if (light4) {
-            // light moving independently to object and camera
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT3);
-            glPushMatrix();
-            glLoadIdentity();
-            camera.setMatrix();
-
-            glPushMatrix();
-            glLoadIdentity();
-            glRotatef(uhel * 2, 0, 0, 1);
-            glTranslatef(-8f, -8f, -20);
-            glLightfv(GL_LIGHT3, GL_POSITION, new float[]{0, 0, 0, 1});
-            drawBall(0, 1, 1, 0, 0, 0);
-            glPopMatrix();
-
-            glRotatef(uhel, 0, 0, 1);
-            //glCallList(1);
-            textInfo += "4";
-            glPopMatrix();
-        }
-
-        if (light5) {
-            // light with constant position relative to object
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT4);
-            glPushMatrix();
-            glLoadIdentity();
-            camera.setMatrix();
-            glPushMatrix();
-            glTranslatef(6f, 0, 0);
-            glLightfv(GL_LIGHT4, GL_POSITION, new float[]{0, 0, 0, 1});
-            drawBall(1, 1, 0, 0, 0, 0);
-            glPopMatrix();
-            glRotatef(uhel, 0, 0, 1);
-            //glCallList(1); //replaced with call after all conditions
-            glPopMatrix();
-            textInfo += "5";
-        }
-
-        if (light6) {
-            // pulsing light with constant position relative to object
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT5);
-            glPushMatrix();
-            glLoadIdentity();
-            camera.setMatrix();
-            glPushMatrix();
-            glTranslatef(0f, 7, 0);
-            glLightfv(GL_LIGHT5, GL_POSITION, new float[]{0, 0, 0, 1});
-            float intensity = (float) (Math.sin(Math.toRadians(uhel * 5)) * 0.5 + 0.5);
-            setLight(GL_LIGHT5, intensity, 0, intensity);
-            drawBall(intensity, 0, intensity, 0, 0, 0);
-            glPopMatrix();
-            glRotatef(uhel, 0, 0, 1);
-            //glCallList(1); //replaced with call after all conditions
-            glPopMatrix();
-            textInfo += "6";
-        }
-        //draw scene (rotated sphere) - replacing calls in all conditions
         glPushMatrix();
         glLoadIdentity();
         camera.setMatrix();
         glRotatef(uhel, 0, 0, 1);
-        glCallList(1);
+        scene();
         glPopMatrix();
-
-        glDisable(GL_LIGHTING);
-        glDisable(GL_LIGHT0);
-        glDisable(GL_LIGHT1);
-        glDisable(GL_LIGHT2);
-        glDisable(GL_LIGHT3);
-        glDisable(GL_LIGHT4);
-        glDisable(GL_LIGHT5);
 
         glPushMatrix();
         camera.setMatrix();
@@ -440,6 +329,7 @@ public class Renderer extends AbstractRenderer {
         textRenderer.clear();
         textRenderer.addStr2D(3, 20, text);
         textRenderer.addStr2D(3, 40, textInfo);
+        textRenderer.addStr2D(3, 60, textInfo2);
         textRenderer.addStr2D(width - 90, height - 3, " (c) PGRF UHK");
         textRenderer.draw();
     }

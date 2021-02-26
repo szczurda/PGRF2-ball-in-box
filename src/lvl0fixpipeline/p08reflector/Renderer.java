@@ -29,7 +29,7 @@ public class Renderer extends AbstractRenderer {
     private boolean mouseButton3 = false;
     private boolean per = true, flat = false, light = false, spot = false;
     private int wire = 0;
-    private float kA = 0.5f, kD = 0.5f, kS = 0.5f, kH = 10;
+    private float kA = 0.5f, kD = 0.5f, kS = 0.5f, kH = 10, kE;
     private float step = 0.01f;
 
     public Renderer() {
@@ -89,6 +89,12 @@ public class Renderer extends AbstractRenderer {
                         break;
                     case GLFW_KEY_F:
                         kH = kH > 0 ? kH * (1 - step) : 1;
+                        break;
+                    case GLFW_KEY_T:
+                        kE = kE < 1 ? kE + step : 1;
+                        break;
+                    case GLFW_KEY_G:
+                        kE = kE > 0 ? kE - step : 0;
                         break;
                 }
             }
@@ -166,21 +172,23 @@ public class Renderer extends AbstractRenderer {
     }
 
     private void setMaterial(int mode) {
+        float initV = 0;
         // surface material setting - specular reflection
-        float[] mat_spec = new float[]{0.1f, 0.1f, 0.1f, 1};
+        float[] mat_spec = new float[]{initV, initV, initV, 1};
         // surface material setting - diffuse reflection
-        float[] mat_dif = new float[]{0.1f, 0.1f, 0.1f, 1};
+        float[] mat_dif = new float[]{initV, initV, initV, 1};
         // surface material setting - ambient reflection
-        float[] mat_amb = new float[]{0.1f, 0.1f, 0.1f, 1};
+        float[] mat_amb = new float[]{initV, initV, initV, 1};
 
         // surface material setting - emission
-        float[] mat_emis = new float[]{0.1f, 0.1f, 0.1f, 1};
+        float[] mat_emis = new float[]{initV, initV, initV, 1};
 
         int index = mode % 3;
 
         mat_dif[index] = kD;
         mat_spec[index] = kS;
-        mat_amb[index] = kD;
+        mat_amb[index] = kA;
+        mat_emis[index] = kE;
 
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_amb);
         glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_dif);
@@ -213,13 +221,13 @@ public class Renderer extends AbstractRenderer {
         glPushMatrix();
         glTranslatef(20, 0, 0);
         setMaterial(1);
-        glutSolidSphere(5, 30, 30);
+        glutSolidSphere(10, 30, 30);
         glPopMatrix();
 
         glPushMatrix();
         glTranslatef(-20, 0, 0);
         setMaterial(0);
-        glutSolidCube(5);
+        glutSolidCube(10);
         glPopMatrix();
     }
 
@@ -266,18 +274,19 @@ public class Renderer extends AbstractRenderer {
         glFrontFace(GL_CCW);
         glPushMatrix();
 
-        glColor3f(1.0f, 1.0f, 0.0f);
-        // cara znazornujici smer reflektoru
+        // line show reflector direction
         if (spot) {
+            glColor3f(1.0f, 1.0f, 1.0f);
             glBegin(GL_LINES);
             glVertex3f(mouseX - width / 2f, height / 2f - mouseY,25);
             glVertex3f(light_direction[0] * 10 + mouseX - width / 2f, light_direction[1] * 10 + height / 2f - mouseY, 15);
             glEnd();
         }
 
+        // sphere shows light position
         glTranslatef(mouseX - width / 2f, height / 2f - mouseY, 25);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glColor3f(1.0f, 1.0f, 0.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
         // koule znazornujici bodovy zdroj svetla
         glutSolidSphere(1, 10, 10);
         glPopMatrix();
@@ -340,19 +349,20 @@ public class Renderer extends AbstractRenderer {
                 text += ", w[i]re";
                 break;
         }
-        String textInfo = //"x " + directX + " y " + directY + ", " +
-                "light: k[AQ] = " + kA + ", k[SW] = " + kS + ", k[DE] = " + kD + ", h[FR] = " + kH;
+        String textInfo1= String.format("material: kA[AQ] %3.1f, kS[SW] %3.1f, kD[DE] %3.1f, kE[TG] %3.1f h[FR] %3.1f)",
+                kA, kS, kD, kE, kH);
 
         glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
 
-        textInfo += String.format(", [lmb] position (%3.1f; %3.1f; %3.1f; %3.1f)", light_position[0], light_position[1], light_position[2], light_position[3]);
+        String textInfo2 = String.format("white light position (%3.1f; %3.1f; %3.1f; %3.1f)", light_position[0], light_position[1], light_position[2], light_position[3]);
         if (spot)
-            textInfo += String.format(", [mmb] direction (%3.1f; %3.1f; %3.1f; %3.1f)", light_direction[0], light_direction[1], light_direction[2], light_direction[3]);
+            textInfo2 += String.format(", [mmb] direction (%3.1f; %3.1f; %3.1f; %3.1f)", light_direction[0], light_direction[1], light_direction[2], light_direction[3]);
         //create and draw text
         textRenderer.clear();
         textRenderer.addStr2D(3, 20, text);
-        textRenderer.addStr2D(3, 40, textInfo);
+        textRenderer.addStr2D(3, 60, textInfo1);
+        textRenderer.addStr2D(3, 40, textInfo2);
         textRenderer.addStr2D(width - 90, height - 3, " (c) PGRF UHK");
         textRenderer.draw();
     }

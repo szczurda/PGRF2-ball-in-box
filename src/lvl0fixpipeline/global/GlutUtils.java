@@ -88,12 +88,17 @@ public class GlutUtils {
         v[0][2] = v[3][2] = v[4][2] = v[7][2] = (float) -size / 2;
         v[1][2] = v[2][2] = v[5][2] = v[6][2] = (float) size / 2;
 
+
         for (int i = 5; i >= 0; i--) {
             glBegin(GL_QUADS);
             glNormal3dv(n[i]);
+            glTexCoord2f(0, 0);
             glVertex3fv(v[faces[i][0]]);
+            glTexCoord2f(0, 1);
             glVertex3fv(v[faces[i][1]]);
+            glTexCoord2f(1, 1);
             glVertex3fv(v[faces[i][2]]);
+            glTexCoord2f(1, 0);
             glVertex3fv(v[faces[i][3]]);
             glEnd();
         }
