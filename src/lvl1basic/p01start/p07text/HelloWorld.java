@@ -8,6 +8,7 @@ import lwjglutils.OGLBuffers;
 import lwjglutils.OGLTextRenderer;
 import lwjglutils.OGLUtils;
 
+import java.awt.*;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.Callbacks.*;
@@ -35,7 +36,7 @@ public class HelloWorld {
 	private long window;
 	
 	OGLBuffers buffers, buffers2;
-	OGLTextRenderer textRenderer;
+	OGLTextRenderer textRenderer, textRenderer2, textRenderer3;
 	
 	int shaderProgram, shaderProgram2, locTime, locTime2;
 
@@ -80,8 +81,12 @@ public class HelloWorld {
                 		(HelloWorld.this.width != width || HelloWorld.this.height != height)) {
                 	HelloWorld.this.width = width;
                 	HelloWorld.this.height = height;
-                	if (textRenderer != null)
-                		textRenderer.resize(width, height);
+                	if (textRenderer != null) {
+						textRenderer.resize(width, height);
+						textRenderer2 = new OGLTextRenderer(width, height, new Font("SansSerif", Font.PLAIN, height/20));
+						textRenderer3.resize(width, height);
+
+					}
                 }
             }
         });
@@ -139,9 +144,14 @@ public class HelloWorld {
 		// internal OpenGL ID of a shader uniform (constant during one draw call
 		// - constant value for all processed vertices or pixels) variable
 		locTime = glGetUniformLocation(shaderProgram, "time");
-		locTime2 = glGetUniformLocation(shaderProgram2, "time"); 
-		
-		textRenderer = new OGLTextRenderer(width, height);	
+		locTime2 = glGetUniformLocation(shaderProgram2, "time");
+
+		textRenderer = new OGLTextRenderer(width, height);
+		textRenderer2 = new OGLTextRenderer(width, height, new Font("SansSerif", Font.PLAIN, 20));
+		textRenderer3 = new OGLTextRenderer(width, height);
+		textRenderer3.setColor(Color.BLUE);
+		textRenderer3.setBackgroundColor(Color.LIGHT_GRAY);
+
 	}
 	
 	void createBuffers() {
@@ -229,9 +239,16 @@ public class HelloWorld {
 			
 			//create and draw text
 			textRenderer.clear();
-			textRenderer.addStr2D(3, 60, "áčéěíňůúřšťýž");
-			textRenderer.addStr2D(3, 40, "ABCČDĎEÉĚFGHIÍJKLĽMNŇOÓPQRŘSŠTŤUÚVWXYÝZŽ");
-			textRenderer.addStr2D(3, height-3, "0123456789");
+			textRenderer2.setColor(Color.YELLOW);
+			textRenderer2.setBackgroundColor(new Color(255, 255, 255, 0));
+			for(int i=1; i<=10; i++) {
+				textRenderer2.setRotationAngle(Math.PI*2.*i/10.);
+				textRenderer2.setScale(0.2 * (1 + i));
+				textRenderer2.addStr2D(width / 2, height / 2, "HelloWorld");
+			}
+			textRenderer3.addStr2D(3, 60, "áčéěíňůúřšťýž");
+			textRenderer3.addStr2D(3, 40, "ABCČDĎEÉĚFGHIÍJKLĽMNŇOÓPQRŘSŠTŤUÚVWXYÝZŽ");
+			textRenderer3.addStr2D(3, height-3, "0123456789");
 			
 			textRenderer.addStr2D(3, height-23, "frame: " + frame +
 					 String.format("; fps: %4.1f", fps));
