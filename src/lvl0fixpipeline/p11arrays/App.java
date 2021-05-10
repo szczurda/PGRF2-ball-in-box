@@ -1,4 +1,4 @@
-package lvl0fixpipeline.p11arays;
+package lvl0fixpipeline.p11arrays;
 
 import lvl0fixpipeline.global.LwjglWindow;
 

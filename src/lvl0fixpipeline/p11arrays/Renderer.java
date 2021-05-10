@@ -1,7 +1,9 @@
-package lvl0fixpipeline.p11arays;
+package lvl0fixpipeline.p11arrays;
 
 import lvl0fixpipeline.global.AbstractRenderer;
 import lvl0fixpipeline.global.GLCamera;
+import lwjglutils.OGLModelOBJ;
+import lwjglutils.OGLTexture2D;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWCursorPosCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
@@ -9,6 +11,7 @@ import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 import transforms.Vec3D;
 
+import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -34,12 +37,14 @@ public class Renderer extends AbstractRenderer {
     private float uhel = 0;
 
     private boolean mouseButton1 = false;
-    private boolean per = true, move = false, wire = false;
-    private int arrayMode;
+    private boolean per = true, move = false, wire = true;
+    private int arrayMode = 5, objMode = 0;
 
     private GLCamera camera;
 
-    private int vaoId, vboId, iboId;
+    private int vaoId, vboId, iboId, vaoIdOBJ;
+    OGLModelOBJ model;
+    OGLTexture2D texture;
 
     public Renderer() {
         super();
@@ -64,6 +69,9 @@ public class Renderer extends AbstractRenderer {
                             break;
                         case GLFW_KEY_M:
                             move = !move;
+                            break;
+                        case GLFW_KEY_B:
+                            objMode++;
                             break;
                         case GLFW_KEY_O:
                             arrayMode++;
@@ -229,6 +237,49 @@ public class Renderer extends AbstractRenderer {
         iboId = glGenBuffers();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferDataBuffer, GL_STATIC_DRAW);
+
+        //model = new OGLModelOBJ("/obj/teapot.obj");
+        model= new OGLModelOBJ("/obj/ElephantBody.obj");
+        //model= new OGLModelOBJ("/obj/TexturedCube.obj");
+        //model = new OGLModelOBJ("/obj/ducky.obj");
+        vaoIdOBJ = glGenVertexArrays();
+        glBindVertexArray(vaoIdOBJ);
+
+        FloatBuffer fb = model.getVerticesBuffer();
+        if (fb != null) {
+            vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            fb.rewind();
+            glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+            glVertexPointer(4, GL_FLOAT, 4 * 4, 0);
+        }
+        fb = model.getNormalsBuffer();
+        if (fb != null) {
+            vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            fb.rewind();
+            glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+            glColorPointer(3, GL_FLOAT, 3 * 4, 0);
+            glNormalPointer(GL_FLOAT, 3 * 4, 0);
+        }
+        fb = model.getTexCoordsBuffer();
+        if (fb != null) {
+            vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            fb.rewind();
+            glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+            glTexCoordPointer(2, GL_FLOAT, 2 * 4, 0);
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        System.out.println("Loading textures...");
+        try {
+            texture = new OGLTexture2D("textures/globe.jpg"); // vzhledem k adresari res v projektu
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -258,18 +309,20 @@ public class Renderer extends AbstractRenderer {
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         camera.setMatrix();
+
         glRotatef(uhel, 0, 1, 0);
 
         glColor3f(0.5f, 0.5f, 1);
-        //glutWireSphere(10,16,16);
+
         glutWireCube(2.2);
+
 
         if (!wire)
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        switch (arrayMode % 5) {
+        switch (arrayMode % 6) {
             case 0:
                 glBegin(GL_TRIANGLES);
                 glColor3f(1f, 0f, 0f);
@@ -336,6 +389,47 @@ public class Renderer extends AbstractRenderer {
                 glDisableClientState(GL_INDEX_ARRAY);
                 glBindVertexArray(0);
                 textInfo += "Array m[O]de : glDrawRangeElements ";
+                break;
+            case 5:
+                text += ", O[B]J mode: " + objMode % 4;
+                glBindVertexArray(vaoIdOBJ);
+                glEnableClientState(GL_VERTEX_ARRAY);
+                switch (objMode % 4) {
+                    case 0:
+                        text += " constant color";
+                        glColor3f(1,1,0);
+                        break;
+                    case 1:
+                        text += " normals as color";
+                        glEnableClientState(GL_COLOR_ARRAY);
+                        break;
+                    case 2:
+                        text += " lighting";
+                        float[] light_position = {1,1,1,0};
+                        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+                        glEnable(GL_LIGHTING);
+                        glEnable(GL_LIGHT0);
+                        glEnable(GL_NORMALIZE);
+                        glEnableClientState(GL_NORMAL_ARRAY);
+                        break;
+                    case 3:
+                        text += " texture mapping";
+                        glEnable(GL_TEXTURE_2D);
+                        texture.bind();
+                        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                        break;
+                }
+                glScalef(0.02f,0.02f,0.02f);
+
+                glDrawArrays(GL_TRIANGLES, 0, model.getVerticesBuffer().limit());
+                glDisableClientState(GL_COLOR_ARRAY);
+                glDisableClientState(GL_VERTEX_ARRAY);
+                glDisableClientState(GL_NORMAL_ARRAY);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+                textInfo += "Array m[O]de : OBJ model";
+                glDisable(GL_TEXTURE_2D);
+                glDisable(GL_LIGHTING);
+                glBindVertexArray(0);
                 break;
         }
 
