@@ -71,6 +71,8 @@ public class Renderer extends AbstractRenderer {
                         case GLFW_KEY_C:
                             cameraMode++;
                             break;
+                        case GLFW_KEY_LEFT_SHIFT:
+                        case GLFW_KEY_LEFT_CONTROL:
                         case GLFW_KEY_W:
                         case GLFW_KEY_S:
                         case GLFW_KEY_A:
@@ -138,7 +140,33 @@ public class Renderer extends AbstractRenderer {
                         else
                             deltaTrans *= 1.02;
                         break;
+                    case GLFW_KEY_LEFT_SHIFT:
+                        if (cameraMode == 0) {
+                            py -= trans;
+                        } else {
+                            py -= Math.sin(zenit * Math.PI / 180 - Math.PI / 2) * trans;
+                        }
+                        camera.up(trans);
+                        if (deltaTrans < 0.001f)
+                            deltaTrans = 0.001f;
+                        else
+                            deltaTrans *= 1.02;
+                        break;
+                    case GLFW_KEY_LEFT_CONTROL:
+                        if (cameraMode == 0) {
+                            py += trans;
+                        } else {
+                            py += Math.sin(zenit * Math.PI / 180 - Math.PI / 2) * trans;
+                        }
+                        camera.down(trans);
+                        if (deltaTrans < 0.001f)
+                            deltaTrans = 0.001f;
+                        else
+                            deltaTrans *= 1.02;
+                        break;
+
                 }
+
             }
         };
 
@@ -317,6 +345,7 @@ public class Renderer extends AbstractRenderer {
                 break;
         }
         lastCameraMode = cameraMode;
+        text +="("+(cameraMode%5)+trans+")";
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();

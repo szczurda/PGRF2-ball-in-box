@@ -137,7 +137,7 @@ public class GLCamera {
 	}
 
 	public void up(double speed) {
-		pos = pos.withX(pos.getX() + speed);
+		pos = pos.withY(pos.getY() + speed);
 		valid = false;
 	}
 

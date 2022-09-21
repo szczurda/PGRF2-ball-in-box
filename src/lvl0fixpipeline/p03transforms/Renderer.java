@@ -128,6 +128,14 @@ public class Renderer extends AbstractRenderer {
     @Override
     public void display() {
         glViewport(0, 0, width, height);
+        // zapnuti nebo vypnuti viditelnosti
+        if (depth)
+            glEnable(GL_DEPTH_TEST);
+        else
+            glDisable(GL_DEPTH_TEST);
+
+        // mazeme image buffer i z-buffer
+        glClearColor(0f, 0f, 0f, 1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
         // vypocet fps, nastaveni rychlosti otaceni podle rychlosti prekresleni
@@ -140,18 +148,9 @@ public class Renderer extends AbstractRenderer {
 
         //System.out.println(fps);
         float speed = 10; // pocet stupnu rotace za vterinu
-        float step = speed * (mils - oldmils) / 1000.0f; // krok za jedno
+        float step = speed * (mils - oldmils) / 1000.0f; // krok za jedno prekresleni
         oldmils = mils;
 
-        // zapnuti nebo vypnuti viditelnosti
-        if (depth)
-            glEnable(GL_DEPTH_TEST);
-        else
-            glDisable(GL_DEPTH_TEST);
-
-        // mazeme image buffer i z-buffer
-        glClearColor(0f, 0f, 0f, 1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glMatrixMode(GL_MODELVIEW);
 
         mode = mode % 7;
