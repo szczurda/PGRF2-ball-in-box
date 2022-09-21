@@ -2,6 +2,7 @@ package lvl0fixpipeline.p11arrays;
 
 import lvl0fixpipeline.global.AbstractRenderer;
 import lvl0fixpipeline.global.GLCamera;
+import lvl0fixpipeline.global.Teapot;
 import lwjglutils.OGLModelOBJ;
 import lwjglutils.OGLTexture2D;
 import org.lwjgl.BufferUtils;
@@ -38,11 +39,11 @@ public class Renderer extends AbstractRenderer {
 
     private boolean mouseButton1 = false;
     private boolean per = true, move = false, wire = true;
-    private int arrayMode = 5, objMode = 0;
+    private int arrayMode = 6, objMode = 0;
 
     private GLCamera camera;
 
-    private int vaoId, vboId, iboId, vaoIdOBJ;
+    private int vaoId, vboId, iboId, vaoIdOBJ, vaoIdTeapot;
     OGLModelOBJ model;
     OGLTexture2D texture;
 
@@ -271,8 +272,7 @@ public class Renderer extends AbstractRenderer {
             glTexCoordPointer(2, GL_FLOAT, 2 * 4, 0);
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+
 
         System.out.println("Loading textures...");
         try {
@@ -280,6 +280,37 @@ public class Renderer extends AbstractRenderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        vaoIdTeapot = glGenVertexArrays();
+        glBindVertexArray(vaoIdTeapot);
+        Teapot teapot = new Teapot();
+        fb = teapot.getVerticesBuffer();
+        if (fb != null) {
+            vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            fb.rewind();
+            glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+            glVertexPointer(4, GL_FLOAT, 4 * 4, 0);
+        }
+        fb = teapot.getNormalsBuffer();
+        if (fb != null) {
+            vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            fb.rewind();
+            glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+            glColorPointer(3, GL_FLOAT, 3 * 4, 0);
+            glNormalPointer(GL_FLOAT, 3 * 4, 0);
+        }
+        fb = teapot.getTexCoordsBuffer();
+        if (fb != null) {
+            vboId = glGenBuffers();
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            fb.rewind();
+            glBufferData(GL_ARRAY_BUFFER, fb, GL_STATIC_DRAW);
+            glTexCoordPointer(2, GL_FLOAT, 2 * 4, 0);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 
     @Override
@@ -322,7 +353,7 @@ public class Renderer extends AbstractRenderer {
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        switch (arrayMode % 6) {
+        switch (arrayMode % 7) {
             case 0:
                 glBegin(GL_TRIANGLES);
                 glColor3f(1f, 0f, 0f);
@@ -421,7 +452,48 @@ public class Renderer extends AbstractRenderer {
                 }
                 glScalef(0.02f,0.02f,0.02f);
 
-                glDrawArrays(GL_TRIANGLES, 0, model.getVerticesBuffer().limit());
+                glDrawArrays(model.getTopology(), 0, model.getVerticesBuffer().limit());
+                glDisableClientState(GL_COLOR_ARRAY);
+                glDisableClientState(GL_VERTEX_ARRAY);
+                glDisableClientState(GL_NORMAL_ARRAY);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+                textInfo += "Array m[O]de : OBJ model";
+                glDisable(GL_TEXTURE_2D);
+                glDisable(GL_LIGHTING);
+                glBindVertexArray(0);
+                break;
+            case 6:
+                text += ", teapot [B]: " + objMode % 4;
+                glBindVertexArray(vaoIdTeapot);
+                glEnableClientState(GL_VERTEX_ARRAY);
+                switch (objMode % 4) {
+                    case 0:
+                        text += " constant color";
+                        glColor3f(1,1,0);
+                        break;
+                    case 1:
+                        text += " normals as color";
+                        glEnableClientState(GL_COLOR_ARRAY);
+                        break;
+                    case 2:
+                        text += " lighting";
+                        float[] light_position = {1,1,1,0};
+                        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+                        glEnable(GL_LIGHTING);
+                        glEnable(GL_LIGHT0);
+                        glEnable(GL_NORMALIZE);
+                        glEnableClientState(GL_NORMAL_ARRAY);
+                        break;
+                    case 3:
+                        text += " texture mapping";
+                        glEnable(GL_TEXTURE_2D);
+                        texture.bind();
+                        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                        break;
+                }
+                glScalef(0.2f,0.2f,0.2f);
+
+                glDrawArrays(model.getTopology(), 0, model.getVerticesBuffer().limit());
                 glDisableClientState(GL_COLOR_ARRAY);
                 glDisableClientState(GL_VERTEX_ARRAY);
                 glDisableClientState(GL_NORMAL_ARRAY);

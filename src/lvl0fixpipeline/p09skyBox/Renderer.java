@@ -394,7 +394,7 @@ public class Renderer extends AbstractRenderer {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         if (per)
-            gluPerspective(45, width / (float) height, 0.1f, 500.0f);
+            gluPerspective(90, width / (float) height, 0.1f, 500.0f);
         else
             glOrtho(-20 * width / (float) height,
                     20 * width / (float) height,
