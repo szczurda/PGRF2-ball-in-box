@@ -42,14 +42,14 @@ import static org.lwjgl.system.MemoryUtil.*;
 
 public class HelloWorld {
 
-	int width, height;
+	int width = 300, height = 300;
 	double ox, oy;
 	private boolean mouseButton1 = false;
 	
 	// The window handle
 	private long window;
 
-	OGLBuffers buffers2, buffers3, buffers;
+	OGLBuffers buffers2, buffers3, buffers, buffers4;
 	OGLTextRenderer textRenderer;
 	
 	int shaderProgram, locMat;
@@ -75,7 +75,7 @@ public class HelloWorld {
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
 		// Create the window
-		window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
+		window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
 		if ( window == NULL )
 			throw new RuntimeException("Failed to create the GLFW window");
 
@@ -220,7 +220,7 @@ public class HelloWorld {
 
 		createBuffers();
 		
-		shaderProgram = ShaderUtils.loadProgram("/lvl1basic/p02geometry/p01cube/simple");
+		shaderProgram = ShaderUtils.loadProgram("/lvl1basic/p02geometry/p02strip/simple");
 		
 		glUseProgram(this.shaderProgram);
 		
@@ -265,15 +265,20 @@ public class HelloWorld {
 			indexBufferData[i + 1] = 2 * i + 1;
 			indexBufferData[i + 2] = 2 * i + 2;
 		}
-		// create geometry with index buffer as the triangle list
+		// create geometry with index buffer as the triangle list [0, 1, 2, 6, 7, 8, 12, 13, 14]
 		buffers2 = new OGLBuffers(strip, attributes, indexBufferData);
 
 		int[] indexBufferData2 = { 0, 1, 2, 5, 8, 11, 14, 17 };
 		// create geometry with index buffer as the triangle strip
 		buffers3 = new OGLBuffers(strip, attributes, indexBufferData2);
+
+		int[] indexBufferData3 = { 0, 1, 2, 5, 65535, 12, 13, 14, 17 };
+		// create geometry with index buffer as the triangle strip with restart index
+		buffers4 = new OGLBuffers(strip, attributes, indexBufferData3);
 		System.out.println("buffers \n " + buffers.toString());
 		System.out.println("buffers \n " + buffers2.toString());
 		System.out.println("buffers \n " + buffers3.toString());
+		System.out.println("buffers \n " + buffers4.toString());
 	}
 
 	private void loop() {
@@ -302,7 +307,7 @@ public class HelloWorld {
 			}
 
 			// bind and draw
-			switch (mode % 9) {
+			switch (mode % 11) {
 			case 0:
 				text += ", [m]ode: all triangles of triangle list, without index buffer";
 				buffers.draw(GL_TRIANGLES, shaderProgram);
@@ -341,9 +346,25 @@ public class HelloWorld {
 				buffers3.draw(GL_TRIANGLE_STRIP, shaderProgram, 5);
 				break;
 			case 8:
-				text += ", [m]ode: 3rd and 4th triangles of triangle strip, with defined index buffer";
+				text += ", [m]ode: 3rd and 4th triangles of triangle strip, with defined index buffer and range";
 				// number of vertices, index of the first vertex
 				buffers3.draw(GL_TRIANGLE_STRIP, shaderProgram, 4, 2);
+				break;
+			case 9:
+				text += ", [m]ode: 1st-2nd and 5th-6th triangles of triangle strip, with defined index buffer and primitive restart index";
+				// number of vertices, index of the first vertex
+				glEnable(GL_PRIMITIVE_RESTART);
+				glPrimitiveRestartIndex(65535);
+				buffers4.draw(GL_TRIANGLE_STRIP, shaderProgram);
+				glDisable(GL_PRIMITIVE_RESTART);
+				break;
+			case 10:
+				text += ", [m]ode: 1st and 4-6 triangles of triangle strip, with defined index buffer, primitive restart index and range";
+				// number of vertices, index of the first vertex
+				glEnable(GL_PRIMITIVE_RESTART);
+				glPrimitiveRestartIndex(65535);
+				buffers4.draw(GL_TRIANGLE_STRIP, shaderProgram,8,1);
+				glDisable(GL_PRIMITIVE_RESTART);
 				break;
 			}
 			

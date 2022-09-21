@@ -28,7 +28,7 @@ import static org.lwjgl.system.MemoryUtil.*;
 
 public class HelloWorld {
 
-	int width, height;
+	int width = 300, height = 300;
 
 	// The window handle
 	private long window;
@@ -129,7 +129,7 @@ public class HelloWorld {
 		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		
 		// Create the window
-		window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
+		window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
 		if ( window == NULL )
 			throw new RuntimeException("Failed to create the GLFW window");
 
@@ -283,6 +283,7 @@ public class HelloWorld {
 	public void run() {
 		try {
 			System.out.println("Hello LWJGL " + Version.getVersion() + "!");
+
 			init();
 
 			loop();

@@ -45,7 +45,7 @@ public class LwjglWindow {
 		DEBUG = debug;
 		WIDTH = width;
 		HEIGHT = height;
-		if (DEBUG) 
+		if (DEBUG)
 			System.err.println("Run in debugging mode");
 		run();
 	}
@@ -180,10 +180,13 @@ public class LwjglWindow {
 		GL.createCapabilities();
 
 		if (DEBUG)
-			GLUtil.setupDebugMessageCallback();	
-		
+			GLUtil.setupDebugMessageCallback();
+
+		renderer.getWsCallback().invoke(window, WIDTH, HEIGHT);
+
 		renderer.init();
-		
+
+
 		// Run the rendering loop until the user has attempted to close
 		// the window or has pressed the ESCAPE key.
 		while ( !glfwWindowShouldClose(window) ) {

@@ -43,7 +43,7 @@ import static org.lwjgl.system.MemoryUtil.*;
 
 public class HelloWorld {
 
-	int width, height;
+	int width = 300, height = 300;
 	double ox, oy;
 	private boolean mouseButton1 = false;
 	
@@ -57,7 +57,8 @@ public class HelloWorld {
 	int shaderProgram, locMat;
 	boolean renderLine = true;
 	Camera cam = new Camera();
-	Mat4 proj, swapYZ = new Mat4(new double[] {
+	Mat4 proj = new Mat4PerspRH(Math.PI / 4, height / (double) width, 0.01, 1000.0);;
+	Mat4 swapYZ = new Mat4(new double[] {
 			1, 0, 0, 0,
 			0, 0, 1, 0,
 			0, 1, 0, 0,
@@ -80,7 +81,7 @@ public class HelloWorld {
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
 		// Create the window
-		window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
+		window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
 		if ( window == NULL )
 			throw new RuntimeException("Failed to create the GLFW window");
 
