@@ -13,7 +13,7 @@ import transforms.Vec3D;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 
-import static lvl0fixpipeline.global.GluUtils.gluPerspective;
+import static lvl0fixpipeline.global.GluUtils.*;
 import static lvl0fixpipeline.global.GlutUtils.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL33.*;
@@ -34,7 +34,7 @@ public class Renderer extends AbstractRenderer {
     private float uhel = 0;
 
     private boolean wire = true, ccw = true;
-    private int front=0, back=1, model = 1, cull = 0;
+    private int front=0, back=1, model = 4, cull = 0;
     private boolean mouseButton1 = false;
     private boolean per = true, move = true;
     private OGLTexture2D texture;
@@ -64,7 +64,7 @@ public class Renderer extends AbstractRenderer {
                         case GLFW_KEY_M -> move = !move;
 
                         //case GLFW_KEY_V -> wire = !wire;
-                        case GLFW_KEY_V -> model = (++model)%4;
+                        case GLFW_KEY_V -> model = (++model);
                         case GLFW_KEY_N -> front = (++front)%3;
                         case GLFW_KEY_B -> back = (++back)%3;
                         case GLFW_KEY_C -> cull = ++cull % 4;
@@ -187,16 +187,24 @@ public class Renderer extends AbstractRenderer {
 
 
     private void scene() {
-        glEnable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
-        glColor3f(1, 1, 1);
         glPushMatrix();
-        texture.bind();
-        switch (model) {
+        if ((model % 2 ) == 0){
+            glDisable(GL_TEXTURE_2D);
+            glColor3f(1, 1, 1);
+        } else {
+            glEnable(GL_TEXTURE_2D);
+            texture.bind();
+        }
+        switch (model % 8) {
             case 0-> glutWireSphere(5, 16, 16);
             case 1-> glutSolidSphere(5, 16, 16);
             case 2-> glutWireCube(5);
             case 3-> glutSolidCube(5);
+            case 4-> glutWireCylinder(3, 5, 16,16);
+            case 5-> glutSolidCylinder(3, 5, 16,16);
+            case 6-> glutWireTorus(3, 5, 16,16);
+            case 7-> glutSolidTorus(3, 5, 16,16);
         }
         glPopMatrix();
     }
