@@ -116,7 +116,6 @@ public class Renderer extends AbstractRenderer {
         glFrontFace(GL_CCW);
         glPolygonMode(GL_FRONT, GL_FILL);
         glPolygonMode(GL_BACK, GL_LINE);
-        glDisable(GL_CULL_FACE);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glMatrixMode(GL_MODELVIEW);
@@ -144,80 +143,15 @@ public class Renderer extends AbstractRenderer {
             fps = 1000 / (double) (mils - oldmils + 1);
             oldFPSmils = mils;
         }
-        String textInfo = String.format(Locale.US, "FPS %3.1f", fps);
 
         //System.out.println(fps);
         float speed = 10; // pocet stupnu rotace za vterinu
         float step = speed * (mils - oldmils) / 1000.0f; // krok za jedno prekresleni
         oldmils = mils;
 
+        uhel++;
         glMatrixMode(GL_MODELVIEW);
-
-        mode = mode % 7;
-
-        switch (mode) {
-            case 0:
-                // rotace postupnou upravou matice
-                glRotatef(1, 0, 0, 1);
-                break;
-
-            case 1:
-                // rotace mazanim matice a zvetsovanim uhlu
-                glLoadIdentity();
-                uhel++;
-                textInfo += ", angle = " + uhel;
-                glRotatef(uhel, 0, 0, 1);
-                break;
-
-            case 2:
-                // rotace podle zmeny pozice mysi
-                glRotated(dx, 1, 0, 0);
-                glRotated(dy, 0, 0, 1);
-                textInfo += ", dx = " + dx + ", dy = " + dy;
-                break;
-
-            case 3:
-                // rotace podle fps
-                glRotatef(step, 0, 0, 1);
-                textInfo += ", step = " + step;
-                break;
-
-            case 4:
-                // rotace mazanim matice a vypocet uhlu na zaklade fps
-                glLoadIdentity();
-                uhel = (uhel + step) % 360;
-                textInfo += ", angle = " + uhel;
-                glRotatef(uhel, 0, 0, 1);
-                break;
-
-            case 5:
-                // rotace podle zmeny pozice mysi, osy rotace rotuji s telesem s telesem
-                glLoadIdentity();
-                glMultMatrixf(modelMatrix);
-                textInfo += ", dx = " + dx + ", dy = " + dy;
-
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    glRotated(dx, 0, 1, 0);
-                    dx = 0;
-                } else {
-                    glRotated(dy, 1, 0, 0);
-                    dy = 0;
-                }
-                glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
-                break;
-
-            case 6:
-                textInfo += ", dx = " + dx + ", dy = " + dy;
-                // rotace podle zmeny pozice mysi, osy rotace zustavaji svisle a vodorovne
-                glLoadIdentity();
-                glRotated(dx, 0, 0, 1);
-                glRotated(dy, 0, 1, 0);
-                glMultMatrixf(modelMatrix);
-                glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
-                dx = 0;
-                dy = 0;
-                break;
-        }
+        glLoadIdentity();
 
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -231,8 +165,8 @@ public class Renderer extends AbstractRenderer {
 
         // pohledova transformace
         // divame se do sceny z kladne osy x, osa z je svisla
-        gluLookAt(50, 0, 0, 0, 0, 0, 0, 0, 1);
-
+        gluLookAt(0, -30, 0, 0, 0, 0, 0, 0, -1);
+// nad scenou, 0 0 Z20
         glBegin(GL_TRIANGLE_FAN);
         glColor3f(1.0f, 1.0f, 1.0f);
         glVertex3f(5.0f, 5.0f, 10.0f);
@@ -245,6 +179,9 @@ public class Renderer extends AbstractRenderer {
         glColor3f(1.0f, 1.0f, 0.0f);
         glVertex3f(0.0f, 10.0f, 0.0f);
         glEnd();
+
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
 
         glBegin(GL_LINES);
         glColor3f(1f, 0f, 0f);
@@ -261,24 +198,6 @@ public class Renderer extends AbstractRenderer {
         float[] color = {1.0f, 1.0f, 1.0f};
         glColor3fv(color);
         glDisable(GL_DEPTH_TEST);
-
-        String text = this.getClass().getName() + ": [Mouse] [M]ode: " + mode + " ";
-        if (per)
-            text += "[P]ersp, ";
-        else
-            text += "[p]ersp, ";
-
-        if (depth)
-            text += "[D]epth ";
-        else
-            text += "[d]epth ";
-
-        //create and draw text
-        textRenderer.clear();
-        textRenderer.addStr2D(3, 20, text);
-        textRenderer.addStr2D(3, 40, textInfo);
-        textRenderer.addStr2D(width - 90, height - 3, " (c) PGRF UHK");
-        textRenderer.draw();
     }
 
 }

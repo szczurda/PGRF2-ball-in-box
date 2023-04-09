@@ -1,9 +1,13 @@
 package lvl0fixpipeline.global;
 
+import de.matthiasmann.twl.Button;
+import de.matthiasmann.twl.ColorSelector;
+import de.matthiasmann.twl.Widget;
 import lwjglutils.OGLTextRenderer;
 import lwjglutils.OGLUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
+import projekt.ControlPanel;
 
 import java.nio.DoubleBuffer;
 
@@ -30,22 +34,18 @@ public abstract class AbstractRenderer {
     public AbstractRenderer() {
         this.width = 600;
         this.height = 400;
+
     }
 
     public void init() {
-        OGLUtils.printOGLparameters();
-        OGLUtils.printLWJLparameters();
-        OGLUtils.printJAVAparameters();
-        OGLUtils.shaderCheck();
         // Set the clear color
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         textRenderer = new OGLTextRenderer(width, height);
+
     }
 
     public void display() {
         glViewport(0, 0, width, height);
-        String text = this.getClass().getName() + ": look at console and try keys, mouse, wheel and window interaction ";
-
         pass++;
         // Set the clear color
         glClearColor(
@@ -58,11 +58,6 @@ public abstract class AbstractRenderer {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //create and draw text
-        textRenderer.clear();
-        textRenderer.addStr2D(3, 20, text);
-        textRenderer.addStr2D(3, 50, "pass " + pass);
-        textRenderer.addStr2D(width - 90, height - 3, " (c) PGRF UHK");
-        textRenderer.draw();
     }
 
     protected GLFWKeyCallback glfwKeyCallback = new GLFWKeyCallback() {
@@ -98,7 +93,6 @@ public abstract class AbstractRenderer {
 
         @Override
         public void invoke(long window, int button, int action, int mods) {
-            //mouseButton1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS;
             DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
             DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
             glfwGetCursorPos(window, xBuffer, yBuffer);
@@ -153,5 +147,22 @@ public abstract class AbstractRenderer {
     public void dispose() {
 
     }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
 
 }
