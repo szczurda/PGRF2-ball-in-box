@@ -34,6 +34,7 @@ public class Renderer extends AbstractRenderer {
     private Cube cube;
     private Ball ball;
 
+    private float cubeScale = 1.0f;
     private ArrayList<Ball> balls = new ArrayList<>();
 
     private final float GRAVITY = -9.81f;
@@ -41,6 +42,10 @@ public class Renderer extends AbstractRenderer {
     private float[] deltaTimeBuffer = new float[100];
     private int nextIndex = 0;
     private float increase = 1;
+
+    private float oldCubeScale;
+
+    private ControlPanel controlPanel;
 
     public Renderer() throws LineUnavailableException {
 
@@ -163,7 +168,7 @@ public class Renderer extends AbstractRenderer {
         cube = new Cube();
         ball = new Ball();
         balls.add(ball);
-        ControlPanel controlPanel = new ControlPanel(0, 0, new Dimension(width, height), balls, cube);
+        controlPanel = new ControlPanel(0, 0, new Dimension(width, height), balls, this, cube);
         controlPanel.setVisible(true);
     }
 
@@ -210,6 +215,13 @@ public class Renderer extends AbstractRenderer {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glPushMatrix();
+        if(cubeScale > oldCubeScale){
+            cube.scale(cubeScale);
+        } else if(cubeScale < oldCubeScale){
+            if(cubeScale <= 1.0){
+                cube.defaultScale();
+            } else cube.scale(-cubeScale);
+        }
         cube.draw();
         glPopMatrix();
         // Draw the cube
@@ -234,8 +246,6 @@ public class Renderer extends AbstractRenderer {
                     otherBalls.add(ball1);
                 }
             }
-
-
             ball.collisionCheck(cube, otherBalls);
             ball.update(deltaTimeSmoothed);
             glPushMatrix();
@@ -246,6 +256,16 @@ public class Renderer extends AbstractRenderer {
 
         glDisable(GL_DEPTH_TEST);
         lastTime = currentTime;
+        oldCubeScale = cubeScale;
+    }
+
+    public float getCubeScale() {
+        return cubeScale;
+    }
+
+
+    public void setCubeScale(float value) {
+        this.cubeScale = value;
     }
 }
 

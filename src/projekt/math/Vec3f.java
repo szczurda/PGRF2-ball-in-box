@@ -31,10 +31,6 @@
 
 package projekt.math;
 
-import projekt.math.Tup3f;
-
-import java.lang.Math;
-
 /**
  * A 3-element vector that is represented by single-precision floating point
  * x,y,z coordinates.  If this value represents a normal, then it should
@@ -98,6 +94,11 @@ public class Vec3f extends Tup3f implements java.io.Serializable {
     }
 
 
+    public Vec3f(float value){
+        this.x = value;
+        this.y = value;
+        this.z = value;
+    }
     /**
      * Returns the squared length of this vector.
      * @return the squared length of this vector
@@ -233,6 +234,13 @@ public class Vec3f extends Tup3f implements java.io.Serializable {
             float resultZ = z / magnitude;
             return new Vec3f(resultX, resultY, resultZ);
 
+    }
+
+    public Vec3f max(Vec3f other) {
+        float newX = Math.max(x, other.x);
+        float newY = Math.max(y, other.y);
+        float newZ = Math.max(z, other.z);
+        return new Vec3f(newX, newY, newZ);
     }
 
 
