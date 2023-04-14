@@ -60,16 +60,15 @@ public class ControlPanel extends JFrame {
         removeBallButton.addActionListener(e -> {
             if (balls.size() > 0) {
                 balls.remove(balls.size() - 1);
-                if(balls.size() > 1){
-                    ballRadiusSlider.setValue((int) balls.get(balls.size() - 1).getRadius() * 10);
-                    ballCorSlider.setValue((int) balls.get(balls.size() - 1).getCorConstant() * 10);
+                if(balls.size() > 0){
+                    ballRadiusSlider.setValue((int) Math.round(balls.get(balls.size() - 1).getRadius() * 100) / 10);
+                    ballCorSlider.setValue((int) Math.round(balls.get(balls.size() - 1).getCorConstant() * 100) / 10);
                     ballMassSlider.setValue((int) balls.get(balls.size() - 1).getMass());
                 } else {
                     ballRadiusSlider.setValue(10);
                     ballCorSlider.setValue(10);
                     ballMassSlider.setValue(1);
                 }
-
             }
         });
         resetSceneButton = new JButton("Reset");
@@ -85,7 +84,9 @@ public class ControlPanel extends JFrame {
         ballMassSlider.addChangeListener(e -> {
             int massSliderValue = ballMassSlider.getValue();
             massValueLabel.setText(String.valueOf(massSliderValue));
-            balls.get(balls.size() - 1).setMass((float) massSliderValue);
+            if(balls.size() > 0) {
+                balls.get(balls.size() - 1).setMass((float) massSliderValue);
+            }
         });
 
         float ballRadiusMinValue = 0.5f;
@@ -106,7 +107,9 @@ public class ControlPanel extends JFrame {
             int radiusSliderValue = ballRadiusSlider.getValue();
             radiusValueLabel.setText(String.valueOf((float) radiusSliderValue / 10));
             float value = (float) radiusSliderValue / scale;
-            balls.get(balls.size() - 1).setRadius(value);
+            if(balls.size() > 0) {
+                balls.get(balls.size() - 1).setRadius(value);
+            }
         });
 
         ballCorSlider = new JSlider();
@@ -124,7 +127,9 @@ public class ControlPanel extends JFrame {
             int corSlidervalue = ballCorSlider.getValue();
             corValueLabel.setText(String.valueOf((float) corSlidervalue / 10));
             float value = (float) corSlidervalue / scaleCor;
-            balls.get(balls.size() - 1).setCorConstant(value);
+            if(balls.size() > 0) {
+                balls.get(balls.size() - 1).setCorConstant(value);
+            }
         });
         cubeSizeSlider = new JSlider();
         int cubeScaleMinValue = 1;
