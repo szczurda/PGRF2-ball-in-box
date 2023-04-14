@@ -3,6 +3,7 @@ import projekt.math.Vec3f;
 
 import javax.vecmath.Vector3d;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -129,7 +130,7 @@ public class Ball {
         this.corConstant = corConstant;
     }
 
-    public void collisionCheck(Cube cube, ArrayList<Ball> otherBalls){
+    public void collisionCheck(Cube cube, CopyOnWriteArrayList<Ball> otherBalls){
         float ballPositiveX = position.x + radius;
         float ballNegativeX = position.x - radius;
         float ballPositiveY = position.y + radius;
@@ -194,11 +195,16 @@ public class Ball {
 
             float overlapDistance = (radius + other.radius) - (float) Math.sqrt(distanceSquared);
             Vec3f correction = normDelta.mul(overlapDistance * 0.5f);
-
             position = position.sub(correction.divide(mass));
             other.position.add(correction.divide(other.mass));
             velocity.add(collisionImpulse.divide(mass));
             other.setVelocity(other.velocity.sub(collisionImpulse.divide(other.mass)));
         }
+    }
+
+    public void giveBallRandomVelocity() {
+        glPushMatrix();
+        setVelocity(new Vec3f((float) Math.random() * 100 - 50, (float) Math.random() * 100 - 50, (float) Math.random() * 100 - 50));
+        glPopMatrix();
     }
 }

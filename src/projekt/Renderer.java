@@ -3,17 +3,17 @@ package projekt;
 import lvl0fixpipeline.global.AbstractRenderer;
 import lvl0fixpipeline.global.GLCamera;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.glfw.GLFWCursorPosCallback;
-import org.lwjgl.glfw.GLFWKeyCallback;
-import org.lwjgl.glfw.GLFWMouseButtonCallback;
-import org.lwjgl.glfw.GLFWScrollCallback;
+import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import projekt.math.Vec3f;
+import org.lwjgl.glfw.GLFWVidMode;
+import transforms.Vec3D;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.awt.*;
 import java.nio.DoubleBuffer;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static lvl0fixpipeline.global.GluUtils.gluPerspective;
 import static org.lwjgl.glfw.GLFW.*;
@@ -35,7 +35,7 @@ public class Renderer extends AbstractRenderer {
     private Ball ball;
 
     private float cubeScale = 1.0f;
-    private ArrayList<Ball> balls = new ArrayList<>();
+    private CopyOnWriteArrayList<Ball> balls = new CopyOnWriteArrayList<>();
 
     private final float GRAVITY = -9.81f;
     private long lastTime;
@@ -46,6 +46,14 @@ public class Renderer extends AbstractRenderer {
     private float oldCubeScale;
 
     private ControlPanel controlPanel;
+
+    int windowPosX;
+    int windowPosY;
+    GLFWVidMode vidmode;
+
+    int relativePosX;
+    int relativePosY;
+
 
     public Renderer() throws LineUnavailableException {
 
@@ -74,16 +82,17 @@ public class Renderer extends AbstractRenderer {
                             break;
                         case GLFW_KEY_SPACE:
                             for (Ball ball : balls) {
-                                glPushMatrix();
-                                ball.setVelocity(new Vec3f((float) Math.random() * 100 - 50, (float) Math.random() * 100 - 50, (float) Math.random() * 100 - 50));
-                                glPopMatrix();
+                                ball.giveBallRandomVelocity();
                             }
                             break;
                         case GLFW_KEY_B:
                             increase += 0.1f;
                             Ball newBall = new Ball(increase, increase, 1f);
                             balls.add(newBall);
-
+                            break;
+                        case GLFW_KEY_R:
+                            resetScene();
+                            break;
                     }
                 }
                 switch (key) {
@@ -137,6 +146,7 @@ public class Renderer extends AbstractRenderer {
                     camera.setZenith(Math.toRadians(zenit));
                     dx = 0;
                     dy = 0;
+                    System.out.println();
                 }
             }
         };
@@ -145,7 +155,13 @@ public class Renderer extends AbstractRenderer {
         glfwScrollCallback = new GLFWScrollCallback() {
             @Override
             public void invoke(long window, double dx, double dy) {
-                //do nothing
+
+            }
+        };
+        glfwWindowSizeCallback = new GLFWWindowSizeCallback() {
+            @Override
+            public void invoke(long window, int width, int height) {
+                controlPanel.toFront();
             }
         };
 
@@ -168,8 +184,20 @@ public class Renderer extends AbstractRenderer {
         cube = new Cube();
         ball = new Ball();
         balls.add(ball);
-        controlPanel = new ControlPanel(0, 0, new Dimension(width, height), balls, this, cube);
+        vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+
+        windowPosX = (vidmode.width() - 1280) / 2;
+
+        windowPosY = (vidmode.height() - 720) / 2;
+
+        controlPanel = new ControlPanel(balls, this, cube);
         controlPanel.setVisible(true);
+        System.out.println("A: " + camera.getAzimuth());
+        System.out.println("Z: " + camera.getZenith());
+        System.out.println("Pos: " + camera.getPosition());
+        System.out.println("Tr: " + trans);
+        System.out.println("DTr: " + deltaTrans);
+
     }
 
     @Override
@@ -182,12 +210,6 @@ public class Renderer extends AbstractRenderer {
             glDisable(GL_DEPTH_TEST);
 
         trans += deltaTrans;
-
-        double a_rad = azimut * Math.PI / 180;
-        double z_rad = zenit * Math.PI / 180;
-        ex = Math.sin(a_rad) * Math.cos(z_rad);
-        ey = Math.sin(z_rad);
-        ez = -Math.cos(a_rad) * Math.cos(z_rad);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -240,7 +262,7 @@ public class Renderer extends AbstractRenderer {
         }
         deltaTimeSmoothed /= deltaTimeBuffer.length;
         for (Ball ball : balls) {
-            ArrayList<Ball> otherBalls = new ArrayList<>();
+            CopyOnWriteArrayList<Ball> otherBalls = new CopyOnWriteArrayList<>();
             for (Ball ball1 : balls) {
                 if (ball1 != ball) {
                     otherBalls.add(ball1);
@@ -267,5 +289,46 @@ public class Renderer extends AbstractRenderer {
     public void setCubeScale(float value) {
         this.cubeScale = value;
     }
+
+    public int getWindowPosX() {
+        return windowPosX;
+    }
+
+    public void setWindowPosX(int windowPosX) {
+        this.windowPosX = windowPosX;
+    }
+
+    public int getWindowPosY() {
+        return windowPosY;
+    }
+
+    public void setWindowPosY(int windowPosY) {
+        this.windowPosY = windowPosY;
+    }
+
+    public void resetScene() {
+        // Reset camera position and orientation
+        cubeScale = 1.0f;
+        // Reset object transformations
+        // Remove any new balls added
+        balls.clear();
+        balls.add(new Ball());
+        zenit = 0;
+        azimut = 0;
+        camera.setPosition(new Vec3D(0, 0, 0)); // Set camera position to (0, 0, 10)
+        camera.setAzimuth(zenit); // Set azimuth to 180 degrees
+        camera.setZenith((azimut));
+        ox = 0;
+        oy = 0;
+        dx = 0;
+        dy = 0;
+        controlPanel.getCubeSizeSlider().setValue(1);
+        controlPanel.getBallRadiusSlider().setValue(10);
+        controlPanel.getBallCorSlider().setValue(10);
+        controlPanel.getBallMassSlider().setValue(1);
+
+        // Reset control panel settings
+    }
+
 }
 

@@ -32,8 +32,9 @@ public abstract class AbstractRenderer {
     }
 
     public AbstractRenderer() {
-        this.width = 600;
-        this.height = 400;
+        this.width = 1280;
+        this.height = 720;
+
 
     }
 
@@ -82,9 +83,8 @@ public abstract class AbstractRenderer {
                 width = w;
                 height = h;
                 System.out.println("Windows resize to [" + w + ", " + h + "]");
-                if (textRenderer != null) {
-                    textRenderer.resize(width, height);
-                }
+
+
             }
         }
     };
@@ -124,6 +124,17 @@ public abstract class AbstractRenderer {
         }
     };
 
+    protected GLFWWindowMaximizeCallback glfwWindowMaximizeCallback = new GLFWWindowMaximizeCallback() {
+        @Override
+        public void invoke(long window, boolean maximized) {
+            if(maximized){
+                System.out.println("Maximized");
+            } else {
+                System.out.println("Restored");
+            }
+        }
+    };
+
     public GLFWKeyCallback getGlfwKeyCallback() {
         return glfwKeyCallback;
     }
@@ -143,6 +154,11 @@ public abstract class AbstractRenderer {
     public GLFWScrollCallback getGlfwScrollCallback() {
         return glfwScrollCallback;
     }
+
+    public GLFWWindowMaximizeCallback getGlfwWindowMaximizeCallback(){
+        return glfwWindowMaximizeCallback;
+    }
+
 
     public void dispose() {
 
