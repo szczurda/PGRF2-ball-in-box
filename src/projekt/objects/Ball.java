@@ -1,14 +1,11 @@
-package projekt;
+package projekt.objects;
 import projekt.math.Vec3f;
 
 import javax.imageio.ImageIO;
-import javax.vecmath.Vector3d;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;

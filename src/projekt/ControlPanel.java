@@ -1,12 +1,11 @@
 package projekt;
 
 import org.lwjgl.opengl.GL;
+import projekt.objects.Ball;
+import projekt.objects.Cube;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowFocusListener;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ControlPanel extends JFrame {

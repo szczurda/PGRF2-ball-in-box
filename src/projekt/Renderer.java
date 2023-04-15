@@ -5,14 +5,13 @@ import lvl0fixpipeline.global.GLCamera;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
-import projekt.math.Vec3f;
 import org.lwjgl.glfw.GLFWVidMode;
+import projekt.objects.Ball;
+import projekt.objects.Cube;
 import transforms.Vec3D;
 
 import javax.sound.sampled.LineUnavailableException;
-import java.awt.*;
 import java.nio.DoubleBuffer;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static lvl0fixpipeline.global.GluUtils.gluPerspective;

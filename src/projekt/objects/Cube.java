@@ -1,4 +1,4 @@
-package projekt;
+package projekt.objects;
 
 import org.lwjgl.BufferUtils;
 import projekt.math.Vec3f;
