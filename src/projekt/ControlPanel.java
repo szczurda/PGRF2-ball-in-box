@@ -4,14 +4,18 @@ import org.lwjgl.opengl.GL;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ControlPanel extends JFrame {
     private final Renderer renderer;
-    private int posX, posY;
-    private CopyOnWriteArrayList<Ball> balls;
+    private final int posX;
+    private final int posY;
+    private final CopyOnWriteArrayList<Ball> balls;
     private float oldVal;
-    private Cube cube;
+    private final Cube cube;
     private Dimension size;
     private JPanel panel = new JPanel();
     private JSlider ballMassSlider, ballRadiusSlider, ballCorSlider, cubeSizeSlider;
@@ -27,7 +31,7 @@ public class ControlPanel extends JFrame {
         this.cube = cube;
         GL.createCapabilities();
         this.balls = balls;
-        this.posX = renderer.getWindowPosX() + renderer.getWidth() / 2 + 20;
+        this.posX = renderer.getWindowPosX() + renderer.getWidth() / 2 + 15;
         this.posY = renderer.getWindowPosY() - 35;
         System.out.println(this.posX + " " + this.posX);
         this.setLocation(posX, posY);
@@ -61,8 +65,8 @@ public class ControlPanel extends JFrame {
             if (balls.size() > 0) {
                 balls.remove(balls.size() - 1);
                 if(balls.size() > 0){
-                    ballRadiusSlider.setValue((int) Math.round(balls.get(balls.size() - 1).getRadius() * 100) / 10);
-                    ballCorSlider.setValue((int) Math.round(balls.get(balls.size() - 1).getCorConstant() * 100) / 10);
+                    ballRadiusSlider.setValue(Math.round(balls.get(balls.size() - 1).getRadius() * 100) / 10);
+                    ballCorSlider.setValue(Math.round(balls.get(balls.size() - 1).getCorConstant() * 100) / 10);
                     ballMassSlider.setValue((int) balls.get(balls.size() - 1).getMass());
                 } else {
                     ballRadiusSlider.setValue(10);
@@ -80,7 +84,7 @@ public class ControlPanel extends JFrame {
         ballMassSlider = new JSlider(1, 10, 1);
         ballMassSlider.setPaintTicks(true);
         massValueLabel.setText(String.valueOf(1));
-        ballMassSlider.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        ballMassSlider.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         ballMassSlider.addChangeListener(e -> {
             int massSliderValue = ballMassSlider.getValue();
             massValueLabel.setText(String.valueOf(massSliderValue));
@@ -98,11 +102,11 @@ public class ControlPanel extends JFrame {
         ballRadiusSlider.setMaximum(maxRadiusSliderValue);
         ballRadiusSlider.setMinimum(minRadiusSliderValue);
         ballRadiusSlider.setValue(10);
-        radiusValueLabel.setText(String.valueOf((float) 1.0f));
+        radiusValueLabel.setText(String.valueOf(1.0f));
         ballRadiusSlider.setMajorTickSpacing(5);
         ballRadiusSlider.setMinorTickSpacing(1);
         ballRadiusSlider.setPaintTicks(false);
-        ballRadiusSlider.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        ballRadiusSlider.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         ballRadiusSlider.addChangeListener(e -> {
             int radiusSliderValue = ballRadiusSlider.getValue();
             radiusValueLabel.setText(String.valueOf((float) radiusSliderValue / 10));
@@ -122,7 +126,7 @@ public class ControlPanel extends JFrame {
         ballCorSlider.setMinimum(minCorSliderValue);
         ballCorSlider.setValue(10);
         corValueLabel.setText(String.valueOf(1.0f));
-        ballCorSlider.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        ballCorSlider.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         ballCorSlider.addChangeListener(e -> {
             int corSlidervalue = ballCorSlider.getValue();
             corValueLabel.setText(String.valueOf((float) corSlidervalue / 10));
@@ -136,7 +140,7 @@ public class ControlPanel extends JFrame {
         int cubeScaleMaxValue = 10;
         cubeSizeSlider.setValue(1);
         sizeValueLabel.setText(String.valueOf(1.0f));
-        cubeSizeSlider.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        cubeSizeSlider.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         cubeSizeSlider.setMinimum(cubeScaleMinValue);
         cubeSizeSlider.setMaximum(cubeScaleMaxValue);
         cubeSizeSlider.setMajorTickSpacing(1);
@@ -165,7 +169,7 @@ public class ControlPanel extends JFrame {
         panel.add(ballMassSlider);
         panel.add(Box.createRigidArea(new Dimension(0, 5)));
         panel.add(massValueLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         ballRadiusLabel.setFont(font);
         radiusValueLabel.setFont(font);
@@ -174,7 +178,7 @@ public class ControlPanel extends JFrame {
         panel.add(ballRadiusSlider);
         panel.add(Box.createRigidArea(new Dimension(0, 5)));
         panel.add(radiusValueLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         ballCorLabel.setFont(font);
         corValueLabel.setFont(font);
@@ -183,7 +187,7 @@ public class ControlPanel extends JFrame {
         panel.add(ballCorSlider);
         panel.add(Box.createRigidArea(new Dimension(0, 5)));
         panel.add(corValueLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         cubeSizeLabel.setFont(font);
         sizeValueLabel.setFont(font);
@@ -192,7 +196,7 @@ public class ControlPanel extends JFrame {
         panel.add(cubeSizeSlider);
         panel.add(Box.createRigidArea(new Dimension(0, 5)));
         panel.add(sizeValueLabel);
-        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         addBallButton.setPreferredSize(new Dimension(150, 30));
         addBallButton.setFont(font);

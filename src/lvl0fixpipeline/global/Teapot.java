@@ -820,7 +820,9 @@ public class Teapot {
     }
 
     private OGLBuffers buffer;
-    private FloatBuffer verticesBuffer, normalsBuffer, texCoordsBuffer;
+    private final FloatBuffer verticesBuffer;
+    private final FloatBuffer normalsBuffer;
+    private final FloatBuffer texCoordsBuffer;
 
 
     public FloatBuffer getVerticesBuffer() {

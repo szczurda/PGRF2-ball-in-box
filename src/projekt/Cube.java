@@ -15,7 +15,9 @@ public class Cube {
 
     private float x = 5.0f, y = 5.0f, z = 5.0f;
 
-    private float dx = 5.0f, dy = 5.0f, dz = 5.0f;
+    private final float dx = 5.0f;
+    private final float dy = 5.0f;
+    private final float dz = 5.0f;
 
     private Vec3f originalScale = new Vec3f(1.0f, 1.0f, 1.0f);
     private float[] vertices = {
@@ -50,7 +52,7 @@ public class Cube {
             -x, -y, -z,
     };
 
-    private int[] indices = {
+    private final int[] indices = {
             0, 1,
             1, 2,
             2, 3,
@@ -97,16 +99,16 @@ public class Cube {
             0.0f, 1.0f, 1.0f,  // cyan
     };
 
-    private float[] defaultVertices = vertices;
+    private final float[] defaultVertices = vertices;
 
-    private int vbo = glGenBuffers(); // Vertex Buffer Object
-    private int ibo = glGenBuffers(); // Index Buffer Object
+    private final int vbo = glGenBuffers(); // Vertex Buffer Object
+    private final int ibo = glGenBuffers(); // Index Buffer Object
 
-    private int cbo = glGenBuffers();
+    private final int cbo = glGenBuffers();
 
-    private IntBuffer indicesBuffer;
-    private FloatBuffer verticesBuffer;
-    private FloatBuffer colorBuffer;
+    private final IntBuffer indicesBuffer;
+    private final FloatBuffer verticesBuffer;
+    private final FloatBuffer colorBuffer;
 
     public Cube() {
         //VB

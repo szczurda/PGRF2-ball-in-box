@@ -21,7 +21,7 @@ public class LwjglWindow {
 
     // The window handle
 	private long window;
-	private AbstractRenderer renderer;
+	private final AbstractRenderer renderer;
 
     private static boolean DEBUG = false;
 
@@ -101,7 +101,7 @@ public class LwjglWindow {
 
 		if (DEBUG)
 			glfwSetErrorCallback(new GLFWErrorCallback() {
-	            GLFWErrorCallback delegate = GLFWErrorCallback.createPrint(System.err);
+	            final GLFWErrorCallback delegate = GLFWErrorCallback.createPrint(System.err);
 
 	            @Override
 	            public void invoke(int error, long description) {

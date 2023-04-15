@@ -1,7 +1,13 @@
 package projekt;
 import projekt.math.Vec3f;
 
+import javax.imageio.ImageIO;
 import javax.vecmath.Vector3d;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -18,9 +24,9 @@ public class Ball {
     private float mass;
     private float radius;
     private float corConstant;
-    int gradation = 10;
+    int gradation = 20;
     float dampingFactor = 0.99f;
-    private int collNum = 0;
+    private final int collNum = 0;
 
     public Ball() { //default
         this.position = new Vec3f(0, 0, 0); // default position is (0, 0, 0)
@@ -29,6 +35,12 @@ public class Ball {
         this.mass = 1f;
         this.radius = 1f;
         this.corConstant = 1f;
+/*        try {
+            loadTexture("res/textures/fim.png");
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }*/
     }
 
     public Ball(float mass, float radius, float corConstant) {
@@ -63,8 +75,8 @@ public class Ball {
         acceleration.set(0, 0, 0);
     }
 
-    public void draw(){
-        float x, y, z, alpha, beta; // Storage for coordinates and angles
+    public void draw() {
+        float x, y, z, alpha, beta, s, t;
         for (alpha = 0.0f; alpha < PI; alpha += PI / gradation) {
             glBegin(GL_TRIANGLE_STRIP);
             glColor3f(alpha / PI, (PI - alpha) / PI, 1.0f);
@@ -72,15 +84,19 @@ public class Ball {
                 x = (float) (radius * Math.cos(beta) * Math.sin(alpha));
                 y = (float) (radius * Math.sin(beta) * Math.sin(alpha));
                 z = (float) (radius * Math.cos(alpha));
+                glTexCoord2f(beta / (2.0f * PI), alpha / PI);
                 glVertex3f(x, y, z);
                 x = (float) (radius * Math.cos(beta) * Math.sin(alpha + PI / gradation));
                 y = (float) (radius * Math.sin(beta) * Math.sin(alpha + PI / gradation));
                 z = (float) (radius * Math.cos(alpha + PI / gradation));
+                glTexCoord2f(beta / (2.0f * PI), alpha / PI + 1.0f / gradation);
                 glVertex3f(x, y, z);
             }
             glEnd();
         }
     }
+
+
 
     public float getRadius(){
         return radius;
@@ -98,20 +114,8 @@ public class Ball {
         this.position = position;
     }
 
-    public Vec3f getVelocity(){
-        return velocity;
-    }
-
     public void setVelocity(Vec3f velocity) {
         this.velocity = velocity;
-    }
-
-    public Vec3f getAcceleration() {
-        return acceleration;
-    }
-
-    public void setAcceleration(Vec3f acceleration) {
-        this.acceleration = acceleration;
     }
 
     public float getMass() {
@@ -207,4 +211,28 @@ public class Ball {
         setVelocity(new Vec3f((float) Math.random() * 100 - 50, (float) Math.random() * 100 - 50, (float) Math.random() * 100 - 50));
         glPopMatrix();
     }
+
+    public void loadTexture(String filename) throws IOException {
+        BufferedImage image = ImageIO.read(new File(filename));
+        int[] pixels = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+        ByteBuffer buffer = ByteBuffer.allocateDirect(image.getWidth() * image.getHeight() * 4);
+        for (int y = image.getHeight() - 1; y >= 0; y--) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int pixel = pixels[y * image.getWidth() + x];
+                buffer.put((byte) ((pixel >> 16) & 0xFF)); // Red component
+                buffer.put((byte) ((pixel >> 8) & 0xFF));  // Green component
+                buffer.put((byte) (pixel & 0xFF));         // Blue component
+                buffer.put((byte) ((pixel >> 24) & 0xFF)); // Alpha component
+            }
+        }
+        buffer.flip();
+        int textureID = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+
 }

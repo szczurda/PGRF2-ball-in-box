@@ -23,37 +23,30 @@ import static org.lwjgl.opengl.GL11.*;
 public class Renderer extends AbstractRenderer {
     private double dx, dy;
     private double ox, oy;
-    private boolean per = false, depth = true, move = false;
-    private double ex, ey, ez;
-    private float uhel = 0;
+    private boolean per = false;
+    private final boolean depth = true;
+    private boolean move = false;
     private boolean mouseButton1 = false;
     private float zenit, azimut;
-    private float trans, deltaTrans = 0.002f;
-    private float[] modelMatrix = new float[16];
+    private float trans, deltaTrans = 0.001f;
     private GLCamera camera;
     private Cube cube;
     private Ball ball;
-
     private float cubeScale = 1.0f;
-    private CopyOnWriteArrayList<Ball> balls = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Ball> balls = new CopyOnWriteArrayList<>();
 
     private final float GRAVITY = -9.81f;
     private long lastTime;
-    private float[] deltaTimeBuffer = new float[100];
+    private final float[] deltaTimeBuffer = new float[100];
     private int nextIndex = 0;
     private float increase = 1;
-
     private float oldCubeScale;
-
     private ControlPanel controlPanel;
-
     int windowPosX;
     int windowPosY;
     GLFWVidMode vidmode;
-
     int relativePosX;
     int relativePosY;
-
 
     public Renderer() throws LineUnavailableException {
 
@@ -151,7 +144,6 @@ public class Renderer extends AbstractRenderer {
             }
         };
 
-
         glfwScrollCallback = new GLFWScrollCallback() {
             @Override
             public void invoke(long window, double dx, double dy) {
@@ -164,8 +156,6 @@ public class Renderer extends AbstractRenderer {
                 controlPanel.toFront();
             }
         };
-
-
     }
 
     @Override
@@ -192,18 +182,12 @@ public class Renderer extends AbstractRenderer {
 
         controlPanel = new ControlPanel(balls, this, cube);
         controlPanel.setVisible(true);
-        System.out.println("A: " + camera.getAzimuth());
-        System.out.println("Z: " + camera.getZenith());
-        System.out.println("Pos: " + camera.getPosition());
-        System.out.println("Tr: " + trans);
-        System.out.println("DTr: " + deltaTrans);
-
     }
 
     @Override
     public void display() {
+        glEnable(GL_TEXTURE_2D);
         glViewport(0, 0, width, height);
-        // zapnuti nebo vypnuti viditelnosti
         if (depth)
             glEnable(GL_DEPTH_TEST);
         else
@@ -230,32 +214,28 @@ public class Renderer extends AbstractRenderer {
         glPushMatrix();
         drawScene();
         glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
     }
 
     public void drawScene() {
-        // Clear the buffers and enable depth testing
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         glPushMatrix();
-        if(cubeScale > oldCubeScale){
+        if (cubeScale > oldCubeScale) {
             cube.scale(cubeScale);
-        } else if(cubeScale < oldCubeScale){
-            if(cubeScale <= 1.0){
+        } else if (cubeScale < oldCubeScale) {
+            if (cubeScale <= 1.0) {
                 cube.defaultScale();
             } else cube.scale(-cubeScale);
         }
         cube.draw();
         glPopMatrix();
-        // Draw the cube
 
-
-        // Calculate delta time and store it in a buffer
         long currentTime = System.nanoTime();
         float deltaTime = (currentTime - lastTime) / 1000000000.0f;
         deltaTimeBuffer[nextIndex] = deltaTime;
         nextIndex = (nextIndex + 1) % deltaTimeBuffer.length;
 
-        // Calculate smoothed delta time by averaging the buffer
         float deltaTimeSmoothed = 0.0f;
         for (int i = 0; i < deltaTimeBuffer.length; i++) {
             deltaTimeSmoothed += deltaTimeBuffer[i];
@@ -275,7 +255,6 @@ public class Renderer extends AbstractRenderer {
             ball.draw();
             glPopMatrix();
         }
-
         glDisable(GL_DEPTH_TEST);
         lastTime = currentTime;
         oldCubeScale = cubeScale;
@@ -307,16 +286,13 @@ public class Renderer extends AbstractRenderer {
     }
 
     public void resetScene() {
-        // Reset camera position and orientation
         cubeScale = 1.0f;
-        // Reset object transformations
-        // Remove any new balls added
         balls.clear();
         balls.add(new Ball());
         zenit = 0;
         azimut = 0;
-        camera.setPosition(new Vec3D(0, 0, 0)); // Set camera position to (0, 0, 10)
-        camera.setAzimuth(zenit); // Set azimuth to 180 degrees
+        camera.setPosition(new Vec3D(0, 0, 0));
+        camera.setAzimuth(zenit);
         camera.setZenith((azimut));
         ox = 0;
         oy = 0;
@@ -326,9 +302,6 @@ public class Renderer extends AbstractRenderer {
         controlPanel.getBallRadiusSlider().setValue(10);
         controlPanel.getBallCorSlider().setValue(10);
         controlPanel.getBallMassSlider().setValue(1);
-
-        // Reset control panel settings
     }
-
 }
 
