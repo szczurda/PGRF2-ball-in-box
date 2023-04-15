@@ -1,13 +1,8 @@
 package lvl0fixpipeline.global;
 
-import de.matthiasmann.twl.Button;
-import de.matthiasmann.twl.ColorSelector;
-import de.matthiasmann.twl.Widget;
 import lwjglutils.OGLTextRenderer;
-import lwjglutils.OGLUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
-import projekt.ControlPanel;
 
 import java.nio.DoubleBuffer;
 

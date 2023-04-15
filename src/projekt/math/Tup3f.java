@@ -30,7 +30,6 @@
  */
 
 package projekt.math;
-import javax.vecmath.Tuple3f;
 import java.lang.Math;
 
 /**
