@@ -2,6 +2,7 @@ package lvl0fixpipeline.global;
 
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.glfw.GLFWWindowCloseCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.system.Configuration;
@@ -98,7 +99,7 @@ public class LwjglWindow {
 		glfwSetCursorPosCallback(window, renderer.getGlfwCursorPosCallback());
 		glfwSetScrollCallback(window, renderer.getGlfwScrollCallback());
 		glfwSetWindowMaximizeCallback(window, renderer.getGlfwWindowMaximizeCallback());
-
+		glfwSetWindowCloseCallback(window, renderer.getGlfwWindowCloseCallback());
 		if (DEBUG)
 			glfwSetErrorCallback(new GLFWErrorCallback() {
 	            final GLFWErrorCallback delegate = GLFWErrorCallback.createPrint(System.err);

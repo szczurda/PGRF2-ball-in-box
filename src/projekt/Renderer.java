@@ -24,7 +24,6 @@ public class Renderer extends AbstractRenderer {
     private double ox, oy;
     private boolean per = false;
     private final boolean depth = true;
-    private boolean move = false;
     private boolean mouseButton1 = false;
     private float zenit, azimut;
     private float trans, deltaTrans = 0.001f;
@@ -33,8 +32,6 @@ public class Renderer extends AbstractRenderer {
     private Ball ball;
     private float cubeScale = 1.0f;
     private final CopyOnWriteArrayList<Ball> balls = new CopyOnWriteArrayList<>();
-
-    private final float GRAVITY = -9.81f;
     private long lastTime;
     private final float[] deltaTimeBuffer = new float[100];
     private int nextIndex = 0;
@@ -44,8 +41,6 @@ public class Renderer extends AbstractRenderer {
     int windowPosX;
     int windowPosY;
     GLFWVidMode vidmode;
-    int relativePosX;
-    int relativePosY;
 
     public Renderer() throws LineUnavailableException {
 
@@ -60,9 +55,6 @@ public class Renderer extends AbstractRenderer {
                     switch (key) {
                         case GLFW_KEY_P:
                             per = !per;
-                            break;
-                        case GLFW_KEY_M:
-                            move = !move;
                             break;
                         case GLFW_KEY_LEFT_SHIFT:
                         case GLFW_KEY_LEFT_CONTROL:
@@ -98,6 +90,15 @@ public class Renderer extends AbstractRenderer {
 
             }
         };
+
+        glfwWindowCloseCallback = new GLFWWindowCloseCallback() {
+            @Override
+            public void invoke(long window) {
+                controlPanel.dispose();
+            }
+        };
+
+
 
         glfwMouseButtonCallback = new GLFWMouseButtonCallback() {
 

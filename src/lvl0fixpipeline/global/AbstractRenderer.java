@@ -130,6 +130,13 @@ public abstract class AbstractRenderer {
         }
     };
 
+    protected GLFWWindowCloseCallback glfwWindowCloseCallback = new GLFWWindowCloseCallback() {
+        @Override
+        public void invoke(long window) {
+
+        }
+    };
+
     public GLFWKeyCallback getGlfwKeyCallback() {
         return glfwKeyCallback;
     }
@@ -152,6 +159,10 @@ public abstract class AbstractRenderer {
 
     public GLFWWindowMaximizeCallback getGlfwWindowMaximizeCallback(){
         return glfwWindowMaximizeCallback;
+    }
+
+    public GLFWWindowCloseCallback getGlfwWindowCloseCallback(){
+        return glfwWindowCloseCallback;
     }
 
 
