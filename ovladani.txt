@@ -1,0 +1,12 @@
+W,A,S,D---------| pohyb kamery
+Ctrl, Shift-----| kamera up, down
+Myš-------------| rozhlížení se
+P --------------| změna projekce
+Space ----------| Vystřelení míčků do náhodného směru
+R --------------| Reset scény
+B --------------| Přidání míčku
+T --------------| Textura
+
+Tlačítka na přidání a odebrání míčku. 
+Tlačítko na reset.
+Slidery upravují poslední přidaný míček a velikost kostky.
