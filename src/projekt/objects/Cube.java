@@ -112,6 +112,7 @@ public class Cube {
 
     public Cube() {
         //VB
+        glDisable(GL_LIGHTING);
         verticesBuffer = BufferUtils.createFloatBuffer(vertices.length); // Vytvoříme V-buffer
         verticesBuffer.put(vertices); // Nacpeme do něj naše body
         verticesBuffer.flip(); // flipneme hodnoty

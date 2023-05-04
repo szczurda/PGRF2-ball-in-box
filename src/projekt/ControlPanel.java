@@ -1,29 +1,39 @@
 package projekt;
 
+import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.opengl.GL;
 import projekt.objects.Ball;
 import projekt.objects.Cube;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_T;
+import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 
 public class ControlPanel extends JFrame {
     private final Renderer renderer;
     private final int posX;
     private final int posY;
     private final CopyOnWriteArrayList<Ball> balls;
-    private float oldVal;
     private final Cube cube;
     private Dimension size;
     private JPanel panel = new JPanel();
     private JSlider ballMassSlider, ballRadiusSlider, ballCorSlider, cubeSizeSlider;
-    private JLabel ballMassLabel, ballRadiusLabel, ballCorLabel, cubeSizeLabel;
+    private JLabel ballMassLabel,ballRadiusLabel,ballCorLabel,cubeSizeLabel,currTextureLabel;
 
     private JLabel massValueLabel, radiusValueLabel, corValueLabel, sizeValueLabel;
 
     private JButton addBallButton, removeBallButton, resetSceneButton;
 
+
+    private int index = 0;
 
     public ControlPanel(CopyOnWriteArrayList<Ball> balls, Renderer renderer, Cube cube) throws HeadlessException {
         this.renderer = renderer;
@@ -45,8 +55,6 @@ public class ControlPanel extends JFrame {
         setFocusableWindowState(false);
         setAutoRequestFocus(false);
         add(panel);
-
-
     }
 
     private void initButtons() {
@@ -75,7 +83,7 @@ public class ControlPanel extends JFrame {
             }
         });
         resetSceneButton = new JButton("Reset");
-        resetSceneButton.addActionListener(e -> renderer.resetScene());
+        resetSceneButton.addActionListener(e -> {renderer.setReset(true);});
 
     }
 
@@ -210,13 +218,15 @@ public class ControlPanel extends JFrame {
         resetSceneButton.setFont(font);
         resetSceneButton.setPreferredSize(new Dimension(150, 30));
         panel.add(resetSceneButton);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        currTextureLabel.setFont(font);
+        panel.add(currTextureLabel);
+
+
+
+
 
     }
-
-
-
-
-
     private void initLabels(){
         ballMassLabel = new JLabel("Hmotnost");
         ballRadiusLabel = new JLabel("Poloměr");
@@ -226,6 +236,7 @@ public class ControlPanel extends JFrame {
         massValueLabel = new JLabel();
         radiusValueLabel = new JLabel();
         sizeValueLabel = new JLabel();
+        currTextureLabel = new JLabel("Textura: \n" + renderer.getCurrTexture().replaceFirst("wicked", ""));
     }
 
     public JSlider getBallMassSlider() {
@@ -259,4 +270,22 @@ public class ControlPanel extends JFrame {
     public void setCubeSizeSlider(JSlider cubeSizeSlider) {
         this.cubeSizeSlider = cubeSizeSlider;
     }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public void setCurrTextureLabel(String text){
+        String resultText = text.replace("res/textures/", "")
+                                .replace(".jpg", "")
+                                .replace(".png", "")
+                                .replace("wicked", "");
+
+        this.currTextureLabel.setText("<html>Textura: <p style = \"color: red\">" + resultText + "</p></html>");
+    }
+
 }

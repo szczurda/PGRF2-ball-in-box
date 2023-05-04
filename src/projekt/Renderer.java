@@ -11,8 +11,21 @@ import projekt.objects.Cube;
 import transforms.Vec3D;
 
 import javax.sound.sampled.LineUnavailableException;
+import java.io.*;
+import java.net.JarURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.DoubleBuffer;
+import java.nio.file.*;
+import java.security.CodeSource;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static lvl0fixpipeline.global.GluUtils.gluPerspective;
 import static org.lwjgl.glfw.GLFW.*;
@@ -41,6 +54,12 @@ public class Renderer extends AbstractRenderer {
     int windowPosX;
     int windowPosY;
     GLFWVidMode vidmode;
+
+    private String currTexture = "";
+
+    private ArrayList<String> textureStringList = new ArrayList<>();
+
+    private int textureListIndex = 0;
 
     public Renderer() throws LineUnavailableException {
 
@@ -72,10 +91,30 @@ public class Renderer extends AbstractRenderer {
                         case GLFW_KEY_B:
                             increase += 0.1f;
                             Ball newBall = new Ball(increase, increase, 1f);
+                            if (currTexture != "") {
+                                newBall.setTextureOn();
+                                newBall.setTexture(currTexture);
+                            }
                             balls.add(newBall);
                             break;
                         case GLFW_KEY_R:
                             resetScene();
+                            break;
+                        case GLFW_KEY_T:
+                            System.out.println(textureListIndex + " / " +textureStringList.size());
+                            if (textureListIndex < textureStringList.size()) {
+                                currTexture = textureStringList.get(textureListIndex);
+                                controlPanel.setCurrTextureLabel(currTexture);
+                                for (Ball ball : balls) {
+                                    ball.setTextureOn();
+                                    ball.setTexture(currTexture);
+                                }
+                                textureListIndex++;
+                            } else {
+                                textureListIndex = 0;
+                                String currTexture = textureStringList.get(textureListIndex);
+                                ball.setTexture(currTexture);
+                            }
                             break;
                     }
                 }
@@ -99,7 +138,6 @@ public class Renderer extends AbstractRenderer {
         };
 
 
-
         glfwMouseButtonCallback = new GLFWMouseButtonCallback() {
 
             @Override
@@ -109,7 +147,6 @@ public class Renderer extends AbstractRenderer {
                 glfwGetCursorPos(window, xBuffer, yBuffer);
                 double x = xBuffer.get(0);
                 double y = yBuffer.get(0);
-
                 mouseButton1 = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS;
 
                 if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
@@ -129,17 +166,14 @@ public class Renderer extends AbstractRenderer {
                     ox = (float) x;
                     oy = (float) y;
                     zenit -= dy / width * 180;
-                    if (zenit > 90)
-                        zenit = 90;
-                    if (zenit <= -90)
-                        zenit = -90;
+                    if (zenit > 90) zenit = 90;
+                    if (zenit <= -90) zenit = -90;
                     azimut += dx / height * 180;
                     azimut = azimut % 360;
                     camera.setAzimuth(Math.toRadians(azimut));
                     camera.setZenith(Math.toRadians(zenit));
                     dx = 0;
                     dy = 0;
-                    System.out.println();
                 }
             }
         };
@@ -160,6 +194,7 @@ public class Renderer extends AbstractRenderer {
 
     @Override
     public void init() {
+        createTextureFile();
         super.init();
         lastTime = System.nanoTime();
         GL.createCapabilities();
@@ -186,12 +221,13 @@ public class Renderer extends AbstractRenderer {
 
     @Override
     public void display() {
-        glEnable(GL_TEXTURE_2D);
+        if (reset) {
+            reset = false;
+            resetScene();
+        }
         glViewport(0, 0, width, height);
-        if (depth)
-            glEnable(GL_DEPTH_TEST);
-        else
-            glDisable(GL_DEPTH_TEST);
+        if (depth) glEnable(GL_DEPTH_TEST);
+        else glDisable(GL_DEPTH_TEST);
 
         trans += deltaTrans;
 
@@ -203,12 +239,8 @@ public class Renderer extends AbstractRenderer {
         glMatrixMode(GL_PROJECTION);
 
         glLoadIdentity();
-        if (!per)
-            gluPerspective(45, width / (float) height, 0.1f, 200.0f);
-        else
-            glOrtho(-20 * width / (float) height,
-                    20 * width / (float) height,
-                    -20, 20, 0.1f, 200.0f);
+        if (!per) gluPerspective(45, width / (float) height, 0.1f, 200.0f);
+        else glOrtho(-20 * width / (float) height, 20 * width / (float) height, -20, 20, 0.1f, 200.0f);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -230,7 +262,6 @@ public class Renderer extends AbstractRenderer {
         }
         cube.draw();
         glPopMatrix();
-
         long currentTime = System.nanoTime();
         float deltaTime = (currentTime - lastTime) / 1000000000.0f;
         deltaTimeBuffer[nextIndex] = deltaTime;
@@ -287,8 +318,14 @@ public class Renderer extends AbstractRenderer {
 
     public void resetScene() {
         cubeScale = 1.0f;
+        for (Ball ball : balls) {
+            deleteTextures(ball.getTextureIDList());
+        }
         balls.clear();
-        balls.add(new Ball());
+        setCurrTexture("");
+        Ball defaultBall = new Ball();
+        defaultBall.setTextureOff();
+        balls.add(defaultBall);
         zenit = 0;
         azimut = 0;
         camera.setPosition(new Vec3D(0, 0, 0));
@@ -302,6 +339,71 @@ public class Renderer extends AbstractRenderer {
         controlPanel.getBallRadiusSlider().setValue(10);
         controlPanel.getBallCorSlider().setValue(10);
         controlPanel.getBallMassSlider().setValue(1);
+        reset = false;
+    }
+
+
+    private void createTextureFile() {
+        URI uri = null;
+        try {
+            uri = getClass().getResource("/projekt/textures").toURI();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        Path myPath;
+        if (uri.getScheme().equals("jar")) {
+            FileSystem fileSystem = null;
+            try {
+                fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            myPath = fileSystem.getPath("/projekt/textures");
+        } else {
+            myPath = Paths.get(uri);
+        }
+        Stream<Path> walk = null;
+        try {
+            walk = Files.walk(myPath, 1);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Iterator<Path> it = walk.iterator();
+
+            while(it.hasNext()){
+                String nextLine = it.next().toString();
+                String output;
+                if(nextLine.contains("\\")) {
+                    output = nextLine.substring(nextLine.lastIndexOf('\\') + 1);
+                } else {
+                    output = nextLine.substring(nextLine.lastIndexOf("/") + 1);
+                }
+                if(output.endsWith(".jpg") || output.endsWith(".jpeg")){
+                    textureStringList.add(output);
+                }
+            }
+    }
+
+
+    public String getCurrTexture() {
+        return currTexture;
+    }
+
+    public void setCurrTexture(String currTexture) {
+        this.currTexture = currTexture;
+    }
+
+    private void deleteTextures(CopyOnWriteArrayList<Integer> listOfIDs) {
+        for (Integer id : listOfIDs) {
+            glDeleteTextures(id);
+            listOfIDs.remove(id);
+        }
+    }
+
+    private boolean reset = false;
+
+    public void setReset(boolean reset) {
+        this.reset = reset;
     }
 }
 

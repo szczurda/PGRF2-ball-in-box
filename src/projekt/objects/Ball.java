@@ -5,7 +5,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -23,7 +26,10 @@ public class Ball {
     private float corConstant;
     int gradation = 20;
     float dampingFactor = 0.99f;
-    private final int collNum = 0;
+    private boolean textureOn = false;
+    private int texID;
+
+    private CopyOnWriteArrayList<Integer> textureIDList = new CopyOnWriteArrayList<>();
 
     public Ball() { //default
         this.position = new Vec3f(0, 0, 0); // default position is (0, 0, 0)
@@ -32,12 +38,6 @@ public class Ball {
         this.mass = 1f;
         this.radius = 1f;
         this.corConstant = 1f;
-/*        try {
-            loadTexture("res/textures/fim.png");
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }*/
     }
 
     public Ball(float mass, float radius, float corConstant) {
@@ -50,33 +50,26 @@ public class Ball {
     }
 
     public void update(float deltaTime) {
-    // Add gravity to the accelerationw
         Vec3f gravity = new Vec3f(0, mass * GRAVITY, 0);
         acceleration.add(gravity);
-
-        // Scale the acceleration by the elapsed time
         Vec3f accelerationScaled = new Vec3f(acceleration.x * deltaTime, acceleration.y * deltaTime, acceleration.z * deltaTime);
-
-        // Update the velocity by adding the scaled acceleration
         velocity.add(accelerationScaled);
-        // Update the position by adding the scaled velocity
-
         Vec3f velocityScaled = new Vec3f(velocity.x * deltaTime, velocity.y * deltaTime, velocity.z * deltaTime);
         position.add(velocityScaled);
-
-        // Apply damping to the velocity to simulate air resistance
-
         velocity.scale(dampingFactor);
-
-        // Reset the acceleration to zero after each update
         acceleration.set(0, 0, 0);
     }
 
     public void draw() {
-        float x, y, z, alpha, beta, s, t;
+        glEnable(GL_TEXTURE_2D);
+        float x, y, z, alpha, beta;
         for (alpha = 0.0f; alpha < PI; alpha += PI / gradation) {
             glBegin(GL_TRIANGLE_STRIP);
-            glColor3f(alpha / PI, (PI - alpha) / PI, 1.0f);
+            if(!textureOn){
+                glColor3f(alpha / PI, (PI - alpha) / PI, 1.0f);
+            } else {
+                glColor3f(1.0f, 1.0f, 1.0f);
+            }
             for (beta = 0.0f; beta < 2.01 * PI; beta += PI / gradation) {
                 x = (float) (radius * Math.cos(beta) * Math.sin(alpha));
                 y = (float) (radius * Math.sin(beta) * Math.sin(alpha));
@@ -91,6 +84,7 @@ public class Ball {
             }
             glEnd();
         }
+        glDisable(GL_TEXTURE_2D);
     }
 
 
@@ -142,15 +136,10 @@ public class Ball {
         if(ballNegativeY <= -cube.getYBounds()){
             setVelocity(new Vec3f(velocity.x, -velocity.y  * corConstant , velocity.z));
             position.y = -cube.getYBounds() + radius + 0.000001f;
-            if(velocity.y / getMass() >= 0.4f){
-
-
-            }
         }
         if(ballPositiveY >= cube.getYBounds()){
             setVelocity(new Vec3f(velocity.x, -velocity.y  * corConstant, velocity.z));
             position.y = cube.getYBounds() - radius + 0.001f;
-
 
         }
         if(ballPositiveX >= cube.getXBounds()){
@@ -183,7 +172,7 @@ public class Ball {
         }
 
     }
-    public void handleCollision(Ball other) {
+    public void handleCollision(Ball other){
         Vec3f delta = other.position.sub(position); // Rozdíl vektorů pozic obou míčků
         float distanceSquared = delta.dot(delta); // Vzdálenost na druhou
         float radiusSquared = (radius + other.radius) * (radius + other.radius); // Součet poloměrů na druhou
@@ -209,8 +198,9 @@ public class Ball {
         glPopMatrix();
     }
 
-    public void loadTexture(String filename) throws IOException {
-        BufferedImage image = ImageIO.read(new File(filename));
+    private int loadTexture(String filename) throws IOException {
+        InputStream inputStream = getClass().getResourceAsStream("/projekt/textures/" + filename);
+        BufferedImage image = ImageIO.read(inputStream);
         int[] pixels = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
         ByteBuffer buffer = ByteBuffer.allocateDirect(image.getWidth() * image.getHeight() * 4);
         for (int y = image.getHeight() - 1; y >= 0; y--) {
@@ -224,12 +214,50 @@ public class Ball {
         }
         buffer.flip();
         int textureID = glGenTextures();
+        textureIDList.add(textureID);
         glBindTexture(GL_TEXTURE_2D, textureID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        return textureID;
     }
 
+
+    public void setTexture(String textureString) {
+        try {
+            if(textureOn){
+                texID = loadTexture(textureString);
+            } else{
+                return;
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean isTextureOn() {
+        return textureOn;
+    }
+
+    public void setTextureOn() {
+        if(!textureOn){
+            textureOn = true;
+        }
+    }
+
+    public void setTextureOff(){
+        if(textureOn){
+            textureOn = false;
+        }
+    }
+    public CopyOnWriteArrayList<Integer> getTextureIDList() {
+        return textureIDList;
+    }
+
+    public void setTextureIDList(CopyOnWriteArrayList<Integer> textureIDList) {
+        this.textureIDList = textureIDList;
+    }
 }
